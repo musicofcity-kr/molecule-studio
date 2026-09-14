@@ -1,0 +1,23 @@
+{
+  "framework": "4.0.0",
+  "target_model": "gpt-6-astra",
+  "model_execution_verified": false,
+  "state": {
+    "status": "completed",
+    "run_id": "2cde4305818a43038eaee8eb4906994c",
+    "task_id": "example-coding",
+    "started_at": "2026-09-13T09:30:05.104427+00:00",
+    "verification": "runs/2cde4305818a43038eaee8eb4906994c/ff4f9612936c4bcdafef4cf202cd59e1/verification.json",
+    "failed_verifications": 0,
+    "no_progress_attempts": 0,
+    "last_failure_key": null,
+    "updated_at": "2026-09-13T09:30:05.854934+00:00",
+    "verification_sha256": "47a49bd24ab3388919cc185e99271e0d26a20031a5a98fa6372a8a700d45f88c",
+    "last_verification_status": "pass",
+    "completed_at": "2026-09-13T09:30:05.854576+00:00",
+    "checkpoint": "runs/2cde4305818a43038eaee8eb4906994c/completion.json",
+    "checkpoint_sha256": "29a71bc63d19dea1f771683da6989711a4dac9718f9adb6c8186873ecfb8ff0d"
+  },
+  "evidence_current": true,
+  "issues": []
+}

@@ -1,0 +1,8 @@
+{
+  "baseline_archive": "UAISE_v3_1_1_All_Templates.zip",
+  "baseline_sha256": "d87e9be3f4fd12f45dfe0f050cb9079ac4a380028f90e82220bbf06ab1208604",
+  "article": "https://www.aitimes.com/news/articleView.html?idxno=215202",
+  "primary_reference": "https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra",
+  "consulted_on": "2026-09-13",
+  "implementation": "project-specific design, not an official OpenAI package"
+}

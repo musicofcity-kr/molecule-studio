@@ -1,0 +1,40 @@
+{
+  "schema_version": "4.0",
+  "task_id": "example-document",
+  "request_reference": "합성 예제 계약; 사용자의 실제 승인이나 실험 결과가 아님",
+  "permissions": {
+    "local_checks": true
+  },
+  "source_paths": [
+    "work"
+  ],
+  "deliverables": [
+    "work/notice.md"
+  ],
+  "checks": [
+    {
+      "id": "local-check",
+      "argv": [
+        "{python}",
+        "work/check.py"
+      ],
+      "timeout_seconds": 20
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC-RUN",
+      "criterion": "제목·분량·중복 단어가 요청 조건에 맞는다.",
+      "method": "command",
+      "check_ids": [
+        "local-check"
+      ]
+    },
+    {
+      "id": "AC-MEANING",
+      "criterion": "교정 전후를 읽어 준비물과 예정 활동의 의미가 유지됨을 확인한다.",
+      "method": "review",
+      "reviewer": "agent"
+    }
+  ]
+}

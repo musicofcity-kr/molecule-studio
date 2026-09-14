@@ -1,0 +1,133 @@
+{
+  "verified_at": "2026-09-13T09:30:09.446421+00:00",
+  "scope": "local framework and synthetic examples; not hosted Astra, Windows, Orca, or molecular app performance",
+  "all_expected_results_observed": true,
+  "observations": [
+    {
+      "case": "coding_setup",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "coding_start",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "coding_finish",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "coding_status",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "coding_repeat_finish",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "document_setup",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "document_start",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "document_pending",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "matched": true
+    },
+    {
+      "case": "document_record_review",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "document_finish",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "document_status",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "document_repeat_finish",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_setup",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_start",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_generate",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_finish",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_status",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_repeat_finish",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_changed_status",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_restart",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "matched": true
+    },
+    {
+      "case": "analysis_wrong_mean_rejected",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "matched": true
+    }
+  ]
+}

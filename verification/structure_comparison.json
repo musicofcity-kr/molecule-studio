@@ -1,0 +1,51 @@
+{
+  "measured_at": "2026-09-13",
+  "measurement": "static unfilled template inputs, not tokens or task performance",
+  "before": {
+    "files": [
+      "AGENTS.md",
+      "SYSTEM.md",
+      "INTENT.md",
+      "SPEC.md",
+      "PLAN.md",
+      "state/current_state.json"
+    ],
+    "characters": 4332,
+    "utf8_bytes": 7356
+  },
+  "after": {
+    "files": [
+      "AGENTS.md",
+      "INTENT.md",
+      "project/contract.json"
+    ],
+    "characters": 1174,
+    "utf8_bytes": 2205
+  },
+  "agents_before": {
+    "files": [
+      "AGENTS.md"
+    ],
+    "characters": 1085,
+    "utf8_bytes": 2119
+  },
+  "agents_after": {
+    "files": [
+      "AGENTS.md"
+    ],
+    "characters": 644,
+    "utf8_bytes": 1392
+  },
+  "old_fixed_role_nodes": 6,
+  "new_fixed_role_nodes": 0,
+  "new_execution_states": [
+    "working",
+    "ready",
+    "blocked",
+    "completed"
+  ],
+  "old_production_minimum_cases": 20,
+  "new_policy": "all task-specific acceptance criteria; no universal case quota",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.39"
+}

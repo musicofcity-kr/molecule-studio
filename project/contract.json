@@ -1,0 +1,100 @@
+{
+  "schema_version": "4.0",
+  "task_id": "molecule-studio-public-20260914",
+  "request_reference": "2026-09-14 user: 2D/3D molecular modeling, measurement, VSEPR, orbitals, spectra, PNG, GitHub and public Vercel; SOL/TERRA/LUNA delegation",
+  "permissions": {
+    "local_checks": true
+  },
+  "source_paths": [
+    "src",
+    "api",
+    "chemistry",
+    "app_tests",
+    "scripts",
+    "package.json",
+    "package-lock.json",
+    "requirements.txt",
+    "index.html",
+    "vite.config.ts",
+    "tsconfig.json",
+    "vercel.json",
+    "docs"
+  ],
+  "deliverables": [
+    "dist/index.html",
+    "docs/USER_GUIDE.md",
+    "docs/SCIENCE.md",
+    "docs/DELIVERY.md"
+  ],
+  "checks": [
+    {
+      "id": "types",
+      "argv": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "timeout_seconds": 90
+    },
+    {
+      "id": "chemistry",
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "-X",
+        "utf8",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "app_tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "id": "browser",
+      "argv": [
+        "node",
+        "scripts/browser-check.mjs"
+      ],
+      "timeout_seconds": 240
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC-CHEMISTRY",
+      "criterion": "Valid SMILES, MOL and drawn graphs produce explicit-H optimized 3D geometry; invalid/oversized input is rejected; distances/angles and supported VSEPR are coordinate/science checked.",
+      "method": "command",
+      "check_ids": [
+        "chemistry"
+      ]
+    },
+    {
+      "id": "AC-WEB",
+      "criterion": "Typed UI runs; real browser exercises drawing-to-3D, atom distance/angle and VSEPR, orbitals, spectra, local collection/notes and nonempty PNG export at desktop/mobile without uncaught errors.",
+      "method": "command",
+      "check_ids": [
+        "types",
+        "browser"
+      ]
+    },
+    {
+      "id": "AC-REVIEW",
+      "criterion": "Inspect final desktop/mobile and exported PNG; scientific approximations, unsupported structures and sources are honest and understandable.",
+      "method": "review",
+      "reviewer": "agent"
+    },
+    {
+      "id": "AC-PUBLISH",
+      "criterion": "Reviewed sources are pushed to GitHub; public Vercel production URL loads anonymously and its deployed chemistry API and principal UI flow work.",
+      "method": "review",
+      "reviewer": "agent"
+    }
+  ],
+  "limits": {
+    "max_no_progress_attempts": 2,
+    "total_check_seconds": 600
+  }
+}

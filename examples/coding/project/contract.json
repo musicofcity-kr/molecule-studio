@@ -1,0 +1,34 @@
+{
+  "schema_version": "4.0",
+  "task_id": "example-coding",
+  "request_reference": "합성 예제 계약; 사용자의 실제 승인이나 실험 결과가 아님",
+  "permissions": {
+    "local_checks": true
+  },
+  "source_paths": [
+    "work"
+  ],
+  "deliverables": [
+    "work/app.py"
+  ],
+  "checks": [
+    {
+      "id": "local-check",
+      "argv": [
+        "{python}",
+        "work/check.py"
+      ],
+      "timeout_seconds": 20
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC-RUN",
+      "criterion": "합성 예시: 문자열 입력을 정수의 두 배로 바꾸는 CLI를 만들고, 잘못된 입력을 안내한다.",
+      "method": "command",
+      "check_ids": [
+        "local-check"
+      ]
+    }
+  ]
+}

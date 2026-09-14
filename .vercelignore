@@ -1,0 +1,16 @@
+.git
+.cache
+.venv
+.agents
+.codex
+node_modules
+app_tests
+tests
+examples
+verification
+runs
+evidence
+reviews
+references
+tools
+MANIFEST.sha256
