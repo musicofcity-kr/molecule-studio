@@ -1,7 +1,7 @@
 {
   "schema_version": "4.0",
-  "task_id": "molecule-studio-vercel-size-fix-20260914",
-  "request_reference": "2026-09-14 user connected GitHub to Vercel and requests repair of the 527.06 MB function bundle failure; user supplied actual build logs.",
+  "task_id": "molecule-studio-labels-elements-20260914",
+  "request_reference": "2026-09-14 user screenshot: add a show/hide control for atom labels in the 3D viewer and more major elements in the 2D sketcher.",
   "permissions": {
     "local_checks": true
   },
@@ -64,7 +64,7 @@
   "acceptance": [
     {
       "id": "AC-LOCAL",
-      "criterion": "The duplicate static-build Python dependency folder is excluded while API and native runtime dependencies remain; TypeScript and chemistry regressions pass.",
+      "criterion": "Atom label visibility is independent from atoms, selection and measurement; the editor offers 12 named elements with readable H/B/Si/I, while types and existing chemistry checks pass.",
       "method": "command",
       "check_ids": [
         "bundle",
@@ -74,7 +74,7 @@
     },
     {
       "id": "AC-REMOTE",
-      "criterion": "The corrected commit is on GitHub main; the connected Vercel build succeeds and the public UI, RDKit API and browser flows work. A build failure or unavailable remote validation remains incomplete.",
+      "criterion": "The feature commit is published on GitHub and the connected Vercel build succeeds. Browser verification covers label toggle, hidden-label selection/measurement, drawing and API conversion with H/B/Si/I, mobile controls and existing PNG flow.",
       "method": "review",
       "reviewer": "agent"
     }

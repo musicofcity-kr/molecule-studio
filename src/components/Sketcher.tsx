@@ -4,7 +4,11 @@ import type { EditorAtom, EditorBond } from '../types';
 import { elementColors, type EditorGraph } from '../lib/chemistry';
 
 type Props = { graph: EditorGraph; onChange: (graph: EditorGraph) => void; onConvert: () => void; disabled?: boolean };
-const elements = ['C', 'N', 'O', 'S', 'P', 'F', 'Cl', 'Br'];
+const elements = [
+  ['C', '탄소'], ['H', '수소'], ['N', '질소'], ['O', '산소'],
+  ['B', '붕소'], ['Si', '규소'], ['P', '인'], ['S', '황'],
+  ['F', '플루오린'], ['Cl', '염소'], ['Br', '브로민'], ['I', '아이오딘'],
+];
 
 function emptyGraph(): EditorGraph { return { atoms: [], bonds: [] }; }
 
@@ -59,12 +63,12 @@ export default function Sketcher({ graph, onChange, onConvert, disabled }: Props
       <button className={tool === 'bond' ? 'selected' : ''} onClick={() => setTool('bond')} aria-label="결합 추가">— 결합</button>
       <button className={tool === 'delete' ? 'selected danger' : ''} onClick={() => setTool('delete')} aria-label="원자 삭제"><Eraser size={15} /> 지우기</button>
     </div>
-    <div className="element-row" aria-label="원소 선택">{elements.map((item) => <button key={item} className={element === item ? 'element selected' : 'element'} onClick={() => { setElement(item); setTool('atom'); }}><i style={{ background: elementColors[item] }} />{item}</button>)}</div>
+    <div className="element-row" aria-label="원소 선택">{elements.map(([item, name]) => <button key={item} title={`${name} (${item})`} aria-pressed={element === item} className={element === item ? 'element selected' : 'element'} onClick={() => { setElement(item); setTool('atom'); }}><i style={{ background: elementColors[item] }} />{item}<span className="element-name">{name}</span></button>)}</div>
     <div className="bond-row"><span>결합 차수</span>{[1, 2, 3].map((value) => <button key={value} className={order === value ? 'selected' : ''} onClick={() => { setOrder(value); setTool('bond'); }}>{value === 1 ? '단일' : value === 2 ? '이중' : '삼중'}</button>)}<button onClick={makeRing} aria-label="벤젠 고리 추가">⌬ 고리</button></div>
     <svg className="sketch-canvas" viewBox={`0 0 ${bounds.width} ${bounds.height}`} onPointerDown={canvasClick} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerLeave={pointerUp} role="img" aria-label="분자 구조 캔버스">
       <defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeOpacity=".055" /></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" />
       {graph.bonds.map((bond, index) => { const a = graph.atoms.find((atom) => atom.id === bond.a); const b = graph.atoms.find((atom) => atom.id === bond.b); if (!a || !b) return null; const dx = b.x - a.x; const dy = b.y - a.y; const size = Math.hypot(dx, dy) || 1; const nx = -dy / size * 4; const ny = dx / size * 4; return <g key={`${bond.a}-${bond.b}-${index}`}>{Array.from({ length: bond.order }, (_, line) => { const shift = (line - (bond.order - 1) / 2); return <line key={line} x1={a.x + nx * shift} y1={a.y + ny * shift} x2={b.x + nx * shift} y2={b.y + ny * shift} className="bond-line" />; })}</g>; })}
-      {graph.atoms.map((atom) => <g key={atom.id} className={`sketch-atom ${pending === atom.id ? 'pending' : ''}`} onPointerDown={(event) => { event.stopPropagation(); setDragging(atom.id); setDragStart(eventPoint(event)); }} onClick={(event) => { event.stopPropagation(); clickAtom(atom.id); }}><circle cx={atom.x} cy={atom.y} r="16" fill={elementColors[atom.element] ?? '#64748b'} /><text x={atom.x} y={atom.y + 5} textAnchor="middle">{atom.element}</text></g>)}
+      {graph.atoms.map((atom) => <g key={atom.id} className={`sketch-atom ${pending === atom.id ? 'pending' : ''}`} onPointerDown={(event) => { event.stopPropagation(); setDragging(atom.id); setDragStart(eventPoint(event)); }} onClick={(event) => { event.stopPropagation(); clickAtom(atom.id); }}><circle cx={atom.x} cy={atom.y} r="16" fill={elementColors[atom.element] ?? '#64748b'} /><text x={atom.x} y={atom.y + 5} textAnchor="middle" style={{ fill: atom.element === 'H' ? '#334155' : '#fff' }}>{atom.element}</text></g>)}
       {!graph.atoms.length && <text x="190" y="122" textAnchor="middle" className="canvas-hint">원소를 선택한 뒤 빈 공간을 클릭하세요</text>} {pending !== null && <text x="190" y="238" textAnchor="middle" className="canvas-hint">다른 원자를 선택하여 결합</text>}
     </svg>
     <div className="sketch-footer"><span>{graph.atoms.length} atoms · {graph.bonds.length} bonds</span><div><button className="icon-button" onClick={() => { const previous = history.at(-1); if (previous) { onChange(previous); setHistory(history.slice(0, -1)); } }} disabled={!history.length} aria-label="되돌리기"><RotateCcw size={16} /></button><button className="icon-button" onClick={clear} disabled={!graph.atoms.length} aria-label="모두 지우기"><Trash2 size={16} /></button><button className="primary compact" onClick={onConvert} disabled={!graph.atoms.length || disabled}>3D 만들기</button></div></div>

@@ -18,6 +18,7 @@ export type MoleculeViewerProps = {
   selectedAtoms: number[];
   onAtomClick: (id: number) => void;
   showHydrogens: boolean;
+  showLabels: boolean;
   showOrbitals: boolean;
   resetKey: number;
   onCaptureReady?: (capture: () => string) => void;
@@ -242,6 +243,7 @@ export default function MoleculeViewer({
   selectedAtoms,
   onAtomClick,
   showHydrogens,
+  showLabels,
   showOrbitals,
   resetKey,
   onCaptureReady,
@@ -564,12 +566,13 @@ export default function MoleculeViewer({
         {orbitalAtom ? <div style={{ ...pillStyle, color: '#34404d' }}>혼성 오비탈 개념도 · 양자화학 계산 아님 · {orbitalAtom.id} ({hybridizationKind(orbitalAtom.hybridization) || 'unknown'})</div> : null}
       </div>
       <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }} aria-hidden="true">
-        {labels.map((id) => {
+        {showLabels && labels.map((id) => {
           const atom = atomById.get(id);
           if (!atom) return null;
           return (
             <span
               key={id}
+              className="atom-label"
               ref={registerLabel(id)}
               style={{
                 position: 'absolute',
@@ -613,7 +616,7 @@ export default function MoleculeViewer({
         </span>
       </div>
       <div style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 3, ...pillStyle, maxWidth: 'calc(100% - 24px)', color: '#637387' }}>
-        드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동 · 원자 ID를 눌러 측정
+        드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동 · 원자를 눌러 측정
       </div>
       <div style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }} aria-label="원자 선택">
         {visibleAtoms.map((atom) => (

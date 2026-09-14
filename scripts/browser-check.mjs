@@ -114,7 +114,7 @@ async function runCase(name, fn) {
     console.log(`PASS: ${name}`);
   } catch (error) {
     cases.push({ name, status: 'failed', durationMs: Date.now() - started, error: error instanceof Error ? error.message : String(error) });
-    console.log(`FAIL: ${name}`);
+    console.log(`FAIL: ${name}: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -148,6 +148,34 @@ try {
     assert(await page.locator('.viewer-stage canvas').count() === 1, 'Three.js canvas was not mounted');
     await page.screenshot({ path: path.join(evidenceDir, 'desktop-initial.png'), fullPage: true });
     return { status: response.status(), title: await text(page.locator('.identity-panel h1')) };
+  });
+
+  await runCase('atom labels toggle without losing atoms or measurement', async () => {
+    const toggle = page.getByRole('checkbox', { name: '원자 라벨' });
+    const labels = page.locator('.atom-label');
+    assert(await toggle.isChecked() && await labels.count() > 0, 'labels should initially be visible');
+    const labelBox = await labels.first().boundingBox();
+    const canvas = page.locator('.viewer-stage canvas');
+    const canvasBox = await canvas.boundingBox();
+    const originalCanvas = await canvas.elementHandle();
+    assert(labelBox && canvasBox, 'atom projection missing');
+    await toggle.uncheck();
+    assert(await labels.count() === 0, 'atom labels were not hidden');
+    assert(await originalCanvas.evaluate((node) => node.isConnected), 'toggle replaced the 3D canvas');
+    await canvas.click({ position: { x: labelBox.x + labelBox.width / 2 - canvasBox.x, y: labelBox.y + labelBox.height / 2 - canvasBox.y } });
+    assert((await text(page.locator('.measurement-strip'))).includes('1/1'), 'hidden-label atom is not clickable');
+    await setMode(page, 'distance');
+    await page.locator('.atom-picker-list button').nth(0).click();
+    await page.locator('.atom-picker-list button').nth(1).click();
+    assert((await text(page.locator('.measurement-strip'))).includes('Å'), 'measurement failed with hidden labels');
+    await page.screenshot({ path: path.join(evidenceDir, 'desktop-labels-hidden.png'), fullPage: true });
+    await toggle.check();
+    assert(await labels.count() > 0, 'labels were not restored');
+    await page.getByRole('checkbox', { name: 'H 표시', exact: true }).uncheck();
+    assert(!(await labels.allTextContents()).some((label) => /· H$/.test(label)), 'hydrogen visibility is not independent');
+    await page.getByRole('checkbox', { name: 'H 표시', exact: true }).check();
+    await setMode(page, 'inspect');
+    return { hiddenLabelSelection: true, hiddenLabelMeasurement: true, canvasPreserved: true };
   });
 
   await runCase('real projected canvas atom click', async () => {
@@ -233,6 +261,37 @@ try {
     return { smiles: after.smiles, formula: after.formula };
   });
 
+  await runCase('expanded element palette draws H B Si I through the real API', async () => {
+    const sketch = page.locator('section.sketcher');
+    assert(await sketch.locator('.element-row button').count() === 12, 'expected 12 element choices');
+    const results = [];
+    for (const [symbol, name, partner, partnerName] of [
+      ['H', '수소', 'O', '산소'], ['B', '붕소', 'F', '플루오린'],
+      ['Si', '규소', 'C', '탄소'], ['I', '아이오딘', 'C', '탄소'],
+    ]) {
+      await sketch.getByRole('button', { name: '모두 지우기' }).click();
+      await sketch.getByTitle(`${name} (${symbol})`, { exact: true }).click();
+      await sketch.locator('.sketch-canvas').click({ position: { x: 90, y: 105 } });
+      assert((await text(sketch.locator('.sketch-atom text').first())) === symbol, `${symbol} was not drawn`);
+      if (symbol === 'H') assert(await sketch.locator('.sketch-atom text').first().evaluate((node) => getComputedStyle(node).fill) === 'rgb(51, 65, 85)', 'H text lacks contrast');
+      await sketch.getByTitle(`${partnerName} (${partner})`, { exact: true }).click();
+      await sketch.locator('.sketch-canvas').click({ position: { x: 240, y: 105 } });
+      await sketch.getByRole('button', { name: '단일', exact: true }).click();
+      await sketch.locator('.sketch-atom').nth(0).click();
+      await sketch.locator('.sketch-atom').nth(1).click();
+      const responsePromise = page.waitForResponse((response) => response.url().endsWith('/api/molecule') && response.request().method() === 'POST');
+      const [response] = await Promise.all([responsePromise, sketch.getByRole('button', { name: '3D 만들기' }).click()]);
+      assert(response.ok(), `${symbol} graph returned ${response.status()}`);
+      const body = await response.json();
+      assert(body.atoms.some((atom) => atom.element === symbol), `${symbol} lost in conversion`);
+      assert(body.svg.includes('<svg') && body.bonds.length > 0, `${symbol} depiction missing`);
+      await waitForMolecule(page);
+      results.push({ element: symbol, formula: body.formula, method: body.method });
+    }
+    await sketch.getByTitle('탄소 (C)', { exact: true }).click();
+    return results;
+  });
+
   await runCase('draw two atoms, add bond, and convert through API', async () => {
     const sketch = page.locator('section.sketcher');
     await sketch.getByRole('button', { name: '모두 지우기' }).click();
@@ -274,6 +333,10 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await runCase('mobile water measurement, orbitals, and PNG', async () => {
     await submitSmiles(page, 'O');
+    const labelsToggle = page.getByRole('checkbox', { name: '원자 라벨' });
+    assert(await labelsToggle.isVisible(), 'label control is hidden on mobile');
+    await labelsToggle.uncheck();
+    assert(await page.locator('.atom-label').count() === 0, 'mobile labels did not hide');
     await setMode(page, 'angle');
     await selectAtom(page, 1, 'H');
     await selectAtom(page, 0, 'O');
@@ -288,6 +351,8 @@ try {
     assert(ends.length === 2 && (ends[0][0] - 50) * (ends[1][1] - 50) !== (ends[1][0] - 50) * (ends[0][1] - 50), 'water VSEPR schematic is collinear');
     await page.getByRole('checkbox', { name: '오비탈' }).check();
     await page.getByText(/혼성 오비탈 개념도 · 양자화학 계산 아님/).waitFor({ state: 'visible' });
+    await labelsToggle.check();
+    assert(await page.locator('.atom-label').count() === 3, 'mobile water labels did not restore');
     const downloadPromise = page.waitForEvent('download', { timeout: 20_000 });
     const [download] = await Promise.all([downloadPromise, page.getByRole('button', { name: '학습 카드' }).click()]);
     const target = path.join(evidenceDir, 'mobile-study-card.png');
