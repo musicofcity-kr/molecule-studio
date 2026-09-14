@@ -11,15 +11,21 @@ SMILES/MOL/편집 그래프 입력, RDKit 3D 생성, 거리·각도, VSEPR, 오�
 ## 검증 상태
 
 - 화학 단위 테스트: 13개 통과(로컬 Windows/Python).
-- TypeScript 및 생산 빌드: 통과. 최종 소스 빌드/계약 검증은 인계 전 갱신합니다.
-- 브라우저: 13개 실제 조작 시나리오와 모바일 가로 넘침 확인. PNG 픽셀 내용 검사 및 최종 육안 검토를 진행 중입니다.
+- TypeScript 및 생산 빌드: 최종 소스 통과.
+- 브라우저: 13/13 통과, uncaught page error 0개. 마지막 검증 완료 시각은 `2026-09-14T02:06:24.522Z`입니다. 실제 원자 클릭, 물의 O-H 거리 0.97 Å 및 H-O-H 각도 104.0°, 전하 보존, 그리기→3D, 컬렉션, 모바일 및 PNG 내용 검사를 포함합니다.
+- 독립 화면/PNG 검토: PASS. 데스크톱·모바일 화면과 두 PNG에서 한글·2D·3D·분광선·계산 한계를 실제로 확인했습니다.
 - 최초 실패 기록: `evidence/browser-first-resume-failure/`.
 - 빈 PNG 발견 당시 기록: `evidence/browser-blank-png/`. 이 기록의 조작 PASS는 PNG 내용 검토 PASS를 의미하지 않습니다.
 - 최종 로컬 증거: `evidence/browser/`.
 
 ## 게시 상태
 
-GitHub 공개 저장소와 Vercel 운영 배포를 준비 중입니다. 공개 URL의 익명 접근 및 실제 배포 API/브라우저 동작이 확인되기 전에는 전체 완료로 처리하지 않습니다.
+- GitHub 공개 소스: https://github.com/musicofcity-kr/molecule-studio
+- 검증한 앱 소스 커밋: `082dcb03ca03626085dad10f0e1e80e9e7415d67`. 원격 `main`과 대조했습니다. 후속 인계 문서 커밋은 이 소스를 바꾸지 않습니다.
+- Vercel 운영 배포: **미완료 — API 403, 운영 배포 생성 권한 부족**. 실제 오류: `You don't have permission to create a Production Deployment for this project.`
+- 최초 연결 도구가 반환한 배포 ID/주소는 배포 조회·빌드 로그·공개 HTTP에서 404/DEPLOYMENT_NOT_FOUND였으므로 성공 증거로 채택하지 않았습니다.
+- 배포 권한이 있는 Vercel 연결을 확보한 뒤 배포하고, 익명 공개 URL·배포된 `/api/molecule`·주요 브라우저 흐름을 검증해야 합니다. 이 단계가 끝나기 전에는 계약 전체 완료로 처리하지 않습니다.
+- 상세 장애물: `evidence/publication.json`. 로컬 계약 검증 결과와 로그: `runs/state.json`의 `verification` 경로. 인계 시 `finish`를 실행하되, AC-PUBLISH 미충족이면 `completed:false`로 보존합니다.
 
 ## 한계
 
