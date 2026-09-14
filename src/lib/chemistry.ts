@@ -2,6 +2,10 @@ import type { Atom, Bond, EditorAtom, EditorBond, Measurement, Molecule, Vsepr }
 
 export type EditorGraph = { atoms: EditorAtom[]; bonds: EditorBond[] };
 
+export function moleculeDisplayName(name?: string): string {
+  return !name || name === 'Molecule' ? '분자(Molecule)' : name;
+}
+
 export const elementColors: Record<string, string> = {
   C: '#334155', N: '#247ba0', O: '#e45757', S: '#d49220', P: '#e07a27', F: '#1d9b75', Cl: '#1d9b75', Br: '#a24f35', I: '#7b5daa', H: '#e8edf2', B: '#a87822', Si: '#a56b45',
 };

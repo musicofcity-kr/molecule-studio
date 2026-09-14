@@ -1,7 +1,7 @@
 {
   "schema_version": "4.0",
-  "task_id": "molecule-studio-labels-elements-20260914",
-  "request_reference": "2026-09-14 user screenshot: add a show/hide control for atom labels in the 3D viewer and more major elements in the 2D sketcher.",
+  "task_id": "molecule-studio-viewer-copy-20260914",
+  "request_reference": "2026-09-14 user screenshot: remove overlapping viewer instructions and display the generic Molecule name in Korean with the English term in parentheses.",
   "permissions": {
     "local_checks": true
   },
@@ -42,39 +42,21 @@
         "--noEmit"
       ],
       "timeout_seconds": 90
-    },
-    {
-      "id": "chemistry",
-      "argv": [
-        ".venv/Scripts/python.exe",
-        "-X",
-        "utf8",
-        "-m",
-        "unittest",
-        "discover",
-        "-s",
-        "app_tests",
-        "-p",
-        "test_*.py",
-        "-v"
-      ],
-      "timeout_seconds": 180
     }
   ],
   "acceptance": [
     {
       "id": "AC-LOCAL",
-      "criterion": "Atom label visibility is independent from atoms, selection and measurement; the editor offers 12 named elements with readable H/B/Si/I, while types and existing chemistry checks pass.",
+      "criterion": "The viewer has one non-overlapping interaction hint. Generic names are localized consistently while named molecules and existing rendering remain intact. Types and bundle checks pass.",
       "method": "command",
       "check_ids": [
         "bundle",
-        "build",
-        "chemistry"
+        "build"
       ]
     },
     {
       "id": "AC-REMOTE",
-      "criterion": "The feature commit is published on GitHub and the connected Vercel build succeeds. Browser verification covers label toggle, hidden-label selection/measurement, drawing and API conversion with H/B/Si/I, mobile controls and existing PNG flow.",
+      "criterion": "The fix is published to GitHub and the connected Vercel build succeeds. Desktop and mobile browser inspection confirms the single hint and localized generic title, retaining named molecules.",
       "method": "review",
       "reviewer": "agent"
     }

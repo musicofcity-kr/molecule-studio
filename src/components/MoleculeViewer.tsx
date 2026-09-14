@@ -9,6 +9,7 @@ import {
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Atom, Bond, Molecule } from '../types';
+import { moleculeDisplayName } from '../lib/chemistry';
 
 export type MoleculeViewerMode = 'inspect' | 'distance' | 'angle';
 
@@ -63,7 +64,7 @@ const ORBITAL_S_COLOR = 0x8a72ed;
 const viewerStyle: CSSProperties = {
   position: 'relative',
   width: '100%',
-  minHeight: 360,
+  minHeight: 0,
   height: '100%',
   overflow: 'hidden',
   border: '1px solid #dce3eb',
@@ -559,7 +560,7 @@ export default function MoleculeViewer({
       ) : null}
       <div style={hudStyle} aria-live="polite">
         <div style={pillStyle}>
-          <strong>{molecule?.name || 'Molecule viewer'}</strong>
+          <strong>{moleculeDisplayName(molecule?.name)}</strong>
           {molecule ? <span style={{ marginLeft: 7, color: '#627386' }}>{molecule.formula}</span> : null}
           {measurementText ? <div style={{ marginTop: 3, color: '#155da7', fontWeight: 700 }}>{mode === 'angle' ? '각도' : '거리'} · {measurementText}</div> : null}
         </div>
@@ -615,7 +616,7 @@ export default function MoleculeViewer({
           {measurement?.label ?? ''}
         </span>
       </div>
-      <div style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 3, ...pillStyle, maxWidth: 'calc(100% - 24px)', color: '#637387' }}>
+      <div className="viewer-help" style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 3, ...pillStyle, maxWidth: 'calc(100% - 24px)', color: '#637387', pointerEvents: 'none' }}>
         드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동 · 원자를 눌러 측정
       </div>
       <div style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }} aria-label="원자 선택">
