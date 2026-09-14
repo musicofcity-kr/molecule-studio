@@ -18,6 +18,7 @@ from rdkit import rdBase
 
 from .spectra import educational_spectra
 from .vsepr import classify_vsepr
+from .education import geometry_reference, hydrogen_bonding
 
 
 MAX_BODY_BYTES = 64 * 1024
@@ -63,6 +64,20 @@ class MoleculeInputError(ValueError):
     """A client-correctable input or bounded-computation error."""
 
     def __init__(self, code: str, message: str, status: int = 400):
+        if not re.search("[가-힣]", message):
+            message = {
+                "invalid_smiles": "SMILES를 해석하지 못했습니다. 원소 기호, 괄호, 고리 번호와 결합 표기를 확인해 주세요.",
+                "invalid_molblock": "MOL 파일의 원자·결합 표기를 읽지 못했습니다. 올바른 MOL 파일인지 확인해 주세요.",
+                "invalid_graph": "그린 구조의 원자, 결합 수 또는 전하를 확인해 주세요.",
+                "invalid_molecule": "구조의 원자가 또는 방향족 결합을 확인해 주세요.",
+                "invalid_input": "SMILES, MOL 파일 또는 그린 구조 중 하나를 입력해 주세요.",
+                "invalid_json": "입력 형식이 올바르지 않습니다. 구조를 다시 입력해 주세요.",
+                "input_too_large": "입력이 허용 크기를 초과했습니다. 더 작은 구조나 파일로 시도해 주세요.",
+                "molecule_too_large": "원자 또는 결합 수가 지원 한도를 초과했습니다. 더 작은 분자를 사용해 주세요.",
+                "multiple_fragments": "하나로 연결된 분자를 입력해 주세요. 점으로 분리한 혼합물·염은 지원하지 않습니다.",
+                "unsupported_molecule": "가상 원자, 질의 원자 또는 비공유 결합은 지원하지 않습니다. 원소와 공유 결합을 명시해 주세요.",
+                "geometry_failed": "제한 시간 안에 3D 구조를 만들지 못했습니다. 더 단순한 구조로 시도해 주세요.",
+            }.get(code, "분석하지 못했습니다. 입력 구조를 확인하고 다시 시도해 주세요.")
         super().__init__(message)
         self.code = code
         self.message = message
@@ -201,9 +216,17 @@ def _parse_request(payload: Any) -> tuple[Chem.Mol, str]:
     with rdBase.BlockLogs():
         if choices[0] == "smiles":
             source = _input_text(payload["smiles"], "smiles", MAX_SMILES_CHARS)
-            molecule = Chem.MolFromSmiles(source, sanitize=True)
+            molecule = Chem.MolFromSmiles(source, sanitize=False)
             if molecule is None:
                 raise MoleculeInputError("invalid_smiles", "SMILES could not be parsed or sanitized.")
+            problems = Chem.DetectChemistryProblems(molecule)
+            valence = next((p for p in problems if p.GetType() == "AtomValenceException"), None)
+            if valence is not None:
+                raise MoleculeInputError("invalid_valence", f"원자 ID {valence.GetAtomIdx()}의 허용 결합 수(원자가)를 초과했습니다. 해당 원자의 결합 차수와 전하를 확인해 주세요.")
+            try:
+                Chem.SanitizeMol(molecule)
+            except Exception:
+                raise MoleculeInputError("invalid_smiles", "SMILES의 결합 또는 방향족 표기를 확인해 주세요. 현재 입력을 유효한 분자로 처리하지 못했습니다.") from None
         elif choices[0] == "molblock":
             source = _input_text(payload["molblock"], "molblock", MAX_INPUT_CHARS)
             molecule = Chem.MolFromMolBlock(source, sanitize=True, removeHs=False, strictParsing=True)
@@ -292,22 +315,22 @@ def _embed(base: Chem.Mol) -> tuple[Chem.Mol, str, list[str]]:
         )
 
     warnings = [
-        "The 3D coordinates are a deterministic generated conformer in ångström, not an experimental structure.",
+        "3D 좌표는 고정 시드로 생성한 하나의 모델 구조(Å)입니다. 실험 구조와 다르며 측정 도구는 현재 모델 좌표에서 거리·각도를 계산합니다.",
     ]
     if AllChem.MMFFHasAllMoleculeParams(molecule):
         status = AllChem.MMFFOptimizeMolecule(molecule, maxIters=300)
         method = "RDKit ETKDGv3 + MMFF94"
         if status != 0:
-            warnings.append("MMFF94 reached the iteration limit; coordinates are usable but not fully minimized.")
+            warnings.append("MMFF94 반복 한도에 도달했습니다. 현재 모델은 에너지 최소화가 완전히 수렴하지 않았을 수 있습니다.")
     elif AllChem.UFFHasAllMoleculeParams(molecule):
         status = AllChem.UFFOptimizeMolecule(molecule, maxIters=300)
-        method = "RDKit ETKDGv3 + UFF fallback"
-        warnings.append("MMFF94 parameters were unavailable; UFF was used because all UFF parameters were available.")
+        method = "RDKit ETKDGv3 + UFF (대체 힘장)"
+        warnings.append("MMFF94 매개변수가 부족해 지원 가능한 UFF 힘장을 사용했습니다.")
         if status != 0:
-            warnings.append("UFF reached the iteration limit; coordinates are usable but not fully minimized.")
+            warnings.append("UFF 반복 한도에 도달했습니다. 현재 모델은 에너지 최소화가 완전히 수렴하지 않았을 수 있습니다.")
     else:
-        method = "RDKit ETKDGv3; no force-field minimization"
-        warnings.append("Neither MMFF94 nor UFF had complete parameters, so no force-field minimization was applied.")
+        method = "RDKit ETKDGv3 (힘장 최소화 미적용)"
+        warnings.append("MMFF94·UFF의 매개변수가 부족해 힘장 에너지 최소화를 적용하지 않았습니다.")
     return molecule, method, warnings
 
 
@@ -368,6 +391,9 @@ def build_molecule(payload: Any) -> dict:
     model, method, warnings = _embed(base)
     molblock, svg = _draw_2d(base, name)
     return {
+        "analysisVersion": 2,
+        "hydrogenBonding": hydrogen_bonding(base),
+        "geometryReference": geometry_reference(base),
         "name": name,
         "smiles": canonical_smiles,
         "formula": rdMolDescriptors.CalcMolFormula(base),

@@ -1,7 +1,7 @@
 {
   "schema_version": "4.0",
-  "task_id": "molecule-studio-viewer-copy-20260914",
-  "request_reference": "2026-09-14 user screenshot: remove overlapping viewer instructions and display the generic Molecule name in Korean with the English term in parentheses.",
+  "task_id": "molecule-studio-science-brief-20260914",
+  "request_reference": "Molecule_Studio_Codex_Fix_Brief.md: required P0/P1; P2 remains optional follow-up.",
   "permissions": {
     "local_checks": true
   },
@@ -23,7 +23,8 @@
   "deliverables": [
     "dist/index.html",
     "docs/DELIVERY.md",
-    "vercel.json"
+    "vercel.json",
+    "docs/SCIENCE_FIX_REPORT.md"
   ],
   "checks": [
     {
@@ -42,21 +43,39 @@
         "--noEmit"
       ],
       "timeout_seconds": 90
+    },
+    {
+      "id": "chemistry",
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "-X",
+        "utf8",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "app_tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "timeout_seconds": 180
     }
   ],
   "acceptance": [
     {
       "id": "AC-LOCAL",
-      "criterion": "The viewer has one non-overlapping interaction hint. Generic names are localized consistently while named molecules and existing rendering remain intact. Types and bundle checks pass.",
+      "criterion": "CHEM-01/02/03: conservative carbonyl classification, unchanged raw HBD/HBA with provenance, geometry-reference separation, coordinate consistency and input bounds pass regressions.",
       "method": "command",
       "check_ids": [
         "bundle",
-        "build"
+        "build",
+        "chemistry"
       ]
     },
     {
       "id": "AC-REMOTE",
-      "criterion": "The fix is published to GitHub and the connected Vercel build succeeds. Desktop and mobile browser inspection confirms the single hint and localized generic title, retaining named molecules.",
+      "criterion": "SPEC-01 and UX-01: shared range rendering on screen/card, Korean scientific limits/errors, safe legacy collection and state transitions; real local/live browser verifies examples, MOL, WebGL, measurement, storage, mobile and meaningful PNG. GitHub/Vercel publication is verified. Report covers required statuses and limitations.",
       "method": "review",
       "reviewer": "agent"
     }

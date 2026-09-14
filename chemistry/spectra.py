@@ -1,43 +1,20 @@
-"""Rule-based educational spectrum regions, never instrument predictions."""
+"""Broad reference regions; no calculated peaks, intensities or integrals."""
 
 from __future__ import annotations
 
-from collections import defaultdict
-
 from rdkit import Chem
-
+from .functional_groups import carbonyl_kind, has_carbonyl
 from .vsepr import TRANSITION_METALS
 
 
-def _peak(low: float, high: float, intensity: float, label: str, count: int | None = None) -> dict:
-    value = {
-        "position": round((low + high) / 2, 3),
-        "intensity": intensity,
-        "label": label,
-        "range": [low, high],
-    }
-    if count is not None:
-        value["count"] = count
-    return value
+def _region(low: float, high: float, label: str) -> dict:
+    return {"range": [low, high], "label": label}
 
 
 def _spectrum(kind: str, title: str, unit: str, x_min: float, x_max: float,
-              peaks: list[dict], notice: str, supported: bool) -> dict:
-    return {
-        "kind": kind,
-        "title": title,
-        "unit": unit,
-        "xMin": x_min,
-        "xMax": x_max,
-        "peaks": peaks,
-        "notice": notice,
-        "supported": supported,
-    }
-
-
-def _has(mol: Chem.Mol, smarts: str) -> bool:
-    query = Chem.MolFromSmarts(smarts)
-    return bool(query and mol.HasSubstructMatch(query))
+              regions: list[dict], notice: str, status: str = "available") -> dict:
+    return {"kind": kind, "title": title, "unit": unit, "xMin": x_min, "xMax": x_max,
+            "peaks": regions, "notice": notice, "supported": bool(regions), "status": status}
 
 
 def _count(mol: Chem.Mol, smarts: str) -> int:
@@ -46,210 +23,136 @@ def _count(mol: Chem.Mol, smarts: str) -> int:
 
 
 def ir_spectrum(mol: Chem.Mol) -> dict:
-    bands: list[tuple[float, float, float, str, int]] = []
-
-    acid = _count(mol, "[CX3](=O)[OX2H1]")
-    alcohol = _count(mol, "[OX2;H1,H2;!$([O][C,S,P]=O)]")
-    amine_h = _count(mol, "[NX3;H1,H2,H3;!$(N[C,S,P]=O)]")
-    amide_h = _count(mol, "[NX3;H1,H2][CX3](=O)")
-    nitrile = _count(mol, "[C]#[N]")
-    alkyne_h = _count(mol, "[C]#[CH]")
-    alkene = _count(mol, "[C,c]=[C,c]")
-    aromatic = sum(1 for bond in mol.GetBonds() if bond.GetIsAromatic())
-    aldehyde = _count(mol, "[CX3H1](=O)[#6]")
-    ester = _count(mol, "[CX3](=O)[OX2][#6]")
-    amide = _count(mol, "[CX3](=O)[NX3]")
-    carbonyl = _count(mol, "[CX3]=[OX1]")
-
-    if acid:
-        bands.append((2500, 3300, 0.9, "carboxylic-acid O-H stretch (broad)", acid))
-    if alcohol:
-        bands.append((3200, 3550, 0.85, "alcohol/phenol/water O-H stretch (broad)", alcohol))
-    if amine_h:
-        bands.append((3300, 3500, 0.65, "amine/ammonia N-H stretch", amine_h))
-    if amide_h:
-        bands.append((3100, 3500, 0.7, "amide N-H stretch", amide_h))
-    if nitrile:
-        bands.append((2210, 2260, 0.7, "nitrile C≡N stretch", nitrile))
-    if alkyne_h:
-        bands.append((3260, 3335, 0.65, "terminal alkyne C-H stretch", alkyne_h))
-    if aldehyde:
-        bands.append((2695, 2830, 0.45, "aldehyde C-H stretch region", aldehyde))
-    if carbonyl:
-        if amide:
-            bands.append((1630, 1690, 0.95, "amide C=O stretch", amide))
-        if ester:
-            bands.append((1735, 1750, 0.95, "saturated ester C=O stretch", ester))
-        remaining = max(0, carbonyl - amide - ester - acid)
-        if remaining:
-            bands.append((1680, 1750, 1.0, "aldehyde/ketone C=O stretch", remaining))
-        if acid:
-            bands.append((1700, 1725, 1.0, "carboxylic-acid C=O stretch", acid))
-    if alkene:
-        bands.append((1620, 1680, 0.55, "C=C stretch", alkene))
-    if aromatic:
-        bands.append((1450, 1600, 0.5, "aromatic-ring C=C region", aromatic))
-    if _has(mol, "[CX4;H1,H2,H3]"):
-        bands.append((2850, 3000, 0.6, "sp3 C-H stretch region", _count(mol, "[CX4;H1,H2,H3]")))
-    if _has(mol, "[cH,$([C;H1,H2]=*)]"):
-        bands.append((3000, 3100, 0.45, "sp2 C-H stretch region", _count(mol, "[cH,$([C;H1,H2]=*)]")))
-
-    peaks = [_peak(low, high, strength, label, count) for low, high, strength, label, count in bands]
-    return _spectrum(
-        "IR",
-        "Educational IR regions",
-        "cm⁻¹",
-        400,
-        4000,
-        peaks,
-        "Rule-based functional-group ranges only; band position, intensity, width, and sample effects are not calculated.",
-        bool(peaks),
-    )
+    from collections import Counter
+    kinds = Counter(carbonyl_kind(a) for a in mol.GetAtoms() if has_carbonyl(a))
+    rules = [
+        (kinds["acid"], 2500, 3300, "카복실산 O-H 신축 참고 범위"),
+        (_count(mol, "[OX2;H1,H2;!$([O][C,S,P]=O)]"), 3200, 3550, "알코올·페놀·물 O-H 신축 참고 범위"),
+        (_count(mol, "[NX3;H1,H2,H3;!$(N[C,S,P]=O)]"), 3300, 3500, "아민·암모니아 N-H 신축"),
+        (_count(mol, "[NX3;H1,H2][CX3](=O)"), 3100, 3500, "아마이드 N-H 신축"),
+        (_count(mol, "[C]#[N]"), 2210, 2260, "나이트릴 C≡N 신축"),
+        (_count(mol, "[C]#[CH]"), 3260, 3335, "말단 알카인 C-H 신축"),
+        (kinds["aldehyde"], 2695, 2830, "알데하이드 C-H 신축"),
+        (kinds["amide"], 1630, 1690, "아마이드 C=O 신축"),
+        (kinds["ester"], 1735, 1750, "에스터 C=O 신축 참고 범위"),
+        (kinds["aldehyde"], 1680, 1750, "알데하이드 C=O 신축 참고 범위"),
+        (kinds["ketone"], 1680, 1750, "케톤 C=O 신축 참고 범위"),
+        (kinds["acid"], 1700, 1725, "카복실산 C=O 신축"),
+        (_count(mol, "[C,c]=[C,c]"), 1620, 1680, "C=C 신축"),
+        (any(b.GetIsAromatic() for b in mol.GetBonds()), 1450, 1600, "방향족 고리 C=C 영역"),
+        (_count(mol, "[CX4;H1,H2,H3]"), 2850, 3000, "sp³ C-H 신축"),
+        (_count(mol, "[cH,$([C;H1,H2]=*)]"), 3000, 3100, "sp² C-H 신축"),
+    ]
+    regions = [_region(low, high, label) for count, low, high, label in rules if count]
+    status = "partial" if regions and kinds[None] else "available" if regions else "unsupported"
+    notice = "작용기 규칙에 해당하는 참고 범위입니다. 실제 흡수 위치·강도·폭·시료 상태는 계산하지 않습니다. 표시가 없다고 실제 흡수가 없다는 뜻은 아닙니다."
+    if kinds[None]:
+        notice += " CO₂ 등 현재 규칙에 없는 C=O 결합 환경에는 유기 카보닐 범위를 배정하지 않습니다."
+    elif not regions:
+        notice += " 현재 구조에 적용할 IR 규칙이 없습니다."
+    return _spectrum("IR", "작용기별 IR 참고 범위", "cm⁻¹", 400, 4000, regions, notice, status)
 
 
-def _is_carbonyl_carbon(atom: Chem.Atom) -> bool:
-    return any(
-        bond.GetBondTypeAsDouble() == 2 and bond.GetOtherAtom(atom).GetSymbol() == "O"
-        for bond in atom.GetBonds()
-    )
-
-
-def _proton_environment(hydrogen: Chem.Atom) -> tuple[float, float, str]:
-    attached = hydrogen.GetNeighbors()[0]
+def _proton_environment(h: Chem.Atom) -> tuple[float, float, str] | None:
+    attached = h.GetNeighbors()[0]
+    if attached.GetFormalCharge() or attached.GetNumRadicalElectrons():
+        return None
     symbol = attached.GetSymbol()
     if symbol == "O":
-        if any(_is_carbonyl_carbon(nbr) for nbr in attached.GetNeighbors() if nbr.GetSymbol() == "C"):
-            return 10.0, 13.0, "carboxylic-acid O-H"
-        return 1.0, 5.5, "exchangeable O-H"
+        if any(carbonyl_kind(n) == "acid" for n in attached.GetNeighbors()):
+            return 10, 13, "카복실산 O-H"
+        return 1, 5.5, "교환 가능한 O-H"
     if symbol == "N":
-        return 1.0, 6.0, "exchangeable N-H"
+        return 1, 6, "교환 가능한 N-H"
     if symbol == "S":
-        return 1.0, 4.0, "S-H"
+        return 1, 4, "S-H"
     if symbol != "C":
-        return 0.0, 12.0, f"H attached to {symbol} (broad reference only)"
-    if _is_carbonyl_carbon(attached):
-        return 9.0, 10.5, "aldehydic C-H"
+        return None
+    if has_carbonyl(attached):
+        return (9, 10.5, "알데하이드 C-H") if carbonyl_kind(attached) == "aldehyde" else None
     if attached.GetIsAromatic():
-        return 6.5, 8.5, "aromatic C-H"
+        return 6.5, 8.5, "방향족 C-H"
     hybrid = str(attached.GetHybridization())
     if hybrid == "SP2":
-        return 4.5, 6.8, "vinylic C-H"
+        return 4.5, 6.8, "알켄 C-H"
     if hybrid == "SP":
-        return 1.8, 3.2, "acetylenic C-H"
-    neighbors = [n for n in attached.GetNeighbors() if n.GetIdx() != hydrogen.GetIdx()]
+        return 1.8, 3.2, "알카인 C-H"
+    neighbors = [n for n in attached.GetNeighbors() if n.GetIdx() != h.GetIdx()]
     if any(n.GetSymbol() in {"O", "N", "F", "Cl", "Br", "I"} for n in neighbors):
-        return 3.0, 4.5, "C-H on carbon bonded to heteroatom"
-    if any(n.GetSymbol() == "C" and _is_carbonyl_carbon(n) for n in neighbors):
-        return 2.0, 3.0, "C-H alpha to carbonyl"
+        return 3, 4.5, "헤테로 원자에 연결된 탄소의 C-H"
+    if any(carbonyl_kind(n) is not None for n in neighbors):
+        return 2, 3, "카보닐에 인접한 C-H"
     if any(n.GetIsAromatic() or str(n.GetHybridization()) == "SP2" for n in neighbors):
-        return 1.6, 3.0, "benzylic/allylic C-H"
-    return 0.5, 2.0, "alkyl C-H"
+        return 1.6, 3, "벤질·알릴 C-H"
+    return (0.5, 2, "알킬 C-H") if hybrid == "SP3" else None
+
+
+def _nmr(kind: str, title: str, maximum: float, environments: list) -> dict:
+    matched = sorted({env for env in environments if env is not None})
+    regions = [_region(low, high, label) for low, high, label in matched]
+    status = ("not_applicable" if not environments else "unsupported" if not regions
+              else "partial" if None in environments else "available")
+    notice = "원자 환경별 넓은 참고 범위입니다. 서로 다른 공명 신호·등가성·분할·결합상수·용매 효과·적분·강도를 계산하지 않습니다. 막대 개수와 크기는 신호 수나 원자 수가 아닙니다."
+    if status == "not_applicable":
+        notice += " 이 구조에는 해당 원자가 없습니다."
+    elif status in {"unsupported", "partial"}:
+        notice += " 일부 또는 전체 원자 환경의 자료/규칙이 없어 해당 범위를 제공하지 않습니다."
+    return _spectrum(kind, title, "ppm", 0, maximum, regions, notice, status)
 
 
 def proton_nmr(mol_h: Chem.Mol) -> dict:
-    grouped: dict[tuple[float, float, str], int] = defaultdict(int)
-    for atom in mol_h.GetAtoms():
-        if atom.GetAtomicNum() == 1 and atom.GetDegree() == 1:
-            grouped[_proton_environment(atom)] += 1
-    peaks = [
-        _peak(low, high, 0.65, label, count)
-        for (low, high, label), count in sorted(grouped.items(), key=lambda item: item[0][0])
-    ]
-    return _spectrum(
-        "1H NMR",
-        "Educational ¹H NMR regions",
-        "ppm",
-        0,
-        14,
-        peaks,
-        "Broad environment ranges only; entries are not distinct resonances, and equivalence, splitting, coupling, solvent, and integration are not predicted. Count is the number of matched explicit H atoms.",
-        bool(peaks),
-    )
+    return _nmr("1H NMR", "원자 환경별 ¹H NMR 참고 범위", 14,
+                [_proton_environment(a) if a.GetDegree() == 1 else None
+                 for a in mol_h.GetAtoms() if a.GetAtomicNum() == 1])
 
 
-def _carbon_environment(atom: Chem.Atom) -> tuple[float, float, str]:
-    if _is_carbonyl_carbon(atom):
-        single_neighbors = [
-            bond.GetOtherAtom(atom)
-            for bond in atom.GetBonds()
-            if bond.GetBondTypeAsDouble() == 1
-        ]
-        if any(n.GetSymbol() in {"O", "N", "S"} for n in single_neighbors):
-            return 160.0, 185.0, "acid-derivative carbonyl C"
-        if atom.GetTotalNumHs() > 0:
-            return 190.0, 205.0, "aldehyde carbonyl C"
-        return 205.0, 220.0, "ketone carbonyl C"
+def _carbon_environment(atom: Chem.Atom) -> tuple[float, float, str] | None:
+    if atom.GetFormalCharge() or atom.GetNumRadicalElectrons():
+        return None
+    if has_carbonyl(atom):
+        return {
+            "acid": (160, 185, "카복실산 카보닐 C"),
+            "ester": (160, 185, "에스터 카보닐 C"),
+            "amide": (160, 185, "아마이드 카보닐 C"),
+            "aldehyde": (190, 205, "알데하이드 카보닐 C"),
+            "ketone": (205, 220, "케톤 카보닐 C"),
+        }.get(carbonyl_kind(atom))
     if atom.GetIsAromatic():
-        return 110.0, 170.0, "aromatic C"
+        return 110, 170, "방향족 C"
     hybrid = str(atom.GetHybridization())
     if hybrid == "SP2":
-        return 100.0, 150.0, "alkene C"
+        return 100, 150, "알켄 C"
     if hybrid == "SP":
-        return 65.0, 90.0, "alkyne C"
+        return (65, 90, "알카인 C") if any(b.GetBondTypeAsDouble() == 3 and b.GetOtherAtom(atom).GetSymbol() == "C" for b in atom.GetBonds()) else None
+    if hybrid != "SP3":
+        return None
     if any(n.GetSymbol() in {"O", "N", "F", "Cl", "Br", "I"} for n in atom.GetNeighbors()):
-        return 35.0, 90.0, "sp3 C bonded to heteroatom"
-    hydrogens = atom.GetTotalNumHs()
+        return 35, 90, "헤테로 원자에 연결된 sp³ C"
+    hydrogens = atom.GetTotalNumHs(includeNeighbors=True)
     if hydrogens >= 3:
-        return 10.0, 30.0, "primary alkyl C"
+        return 10, 30, "일차 알킬 C"
     if hydrogens == 2:
-        return 15.0, 55.0, "secondary alkyl C"
-    return 20.0, 60.0, "substituted alkyl C"
+        return 15, 55, "이차 알킬 C"
+    return 20, 60, "치환된 알킬 C"
 
 
 def carbon_nmr(mol: Chem.Mol) -> dict:
-    grouped: dict[tuple[float, float, str], int] = defaultdict(int)
-    for atom in mol.GetAtoms():
-        if atom.GetSymbol() == "C":
-            grouped[_carbon_environment(atom)] += 1
-    peaks = [
-        _peak(low, high, 0.65, label, count)
-        for (low, high, label), count in sorted(grouped.items(), key=lambda item: item[0][0])
-    ]
-    return _spectrum(
-        "13C NMR",
-        "Educational ¹³C NMR regions",
-        "ppm",
-        0,
-        230,
-        peaks,
-        "Broad carbon-environment ranges only; entries are not distinct resonances, and symmetry, solvent, multiplicity, and intensity are not predicted. Count is the number of matched carbon atoms.",
-        bool(peaks),
-    )
+    return _nmr("13C NMR", "원자 환경별 ¹³C NMR 참고 범위", 230,
+                [_carbon_environment(a) for a in mol.GetAtoms() if a.GetSymbol() == "C"])
 
 
 def uv_vis_spectrum(mol: Chem.Mol) -> dict:
-    problematic = any(
-        atom.GetFormalCharge() != 0 or atom.GetSymbol() in TRANSITION_METALS
-        for atom in mol.GetAtoms()
-    )
-    conjugated = sum(1 for bond in mol.GetBonds() if bond.GetIsConjugated() or bond.GetIsAromatic())
-    aromatic_rings = sum(
-        1
-        for ring in mol.GetRingInfo().BondRings()
-        if ring and all(mol.GetBondWithIdx(index).GetIsAromatic() for index in ring)
-    )
-    if problematic or (conjugated < 2 and aromatic_rings == 0):
-        reason = (
-            "No estimate: charged or transition-metal chromophores require an electronic-structure method."
-            if problematic
-            else "No estimate: no supported conjugated pi chromophore was identified."
-        )
-        return _spectrum("UV-Vis", "UV–Vis conceptual region", "nm", 190, 800, [], reason, False)
-
-    if conjugated >= 5 or aromatic_rings >= 2:
-        low, high, label = 220.0, 450.0, "extended conjugated/aromatic chromophore (conceptual region)"
-    else:
-        low, high, label = 200.0, 350.0, "conjugated/aromatic chromophore (conceptual region)"
-    return _spectrum(
-        "UV-Vis",
-        "UV–Vis conceptual region",
-        "nm",
-        190,
-        800,
-        [_peak(low, high, 0.5, label)],
-        "Conceptual conjugation region only; this band is not a calculated λmax or absorbance. Substitution, solvent, protonation, and electronic structure can shift real spectra substantially.",
-        True,
-    )
+    problematic = any(a.GetFormalCharge() or a.GetNumRadicalElectrons() or a.GetSymbol() in TRANSITION_METALS
+                      or (has_carbonyl(a) and carbonyl_kind(a) is None) for a in mol.GetAtoms())
+    conjugated = sum(b.GetIsConjugated() or b.GetIsAromatic() for b in mol.GetBonds())
+    aromatic_rings = sum(bool(ring) and all(mol.GetBondWithIdx(i).GetIsAromatic() for i in ring)
+                         for ring in mol.GetRingInfo().BondRings())
+    notice = "공액 구조의 넓은 흡수 영역 개념도입니다. 계산된 λmax·흡광도·강도가 아니며 용매·치환기·전자 구조에 따라 실제 스펙트럼이 달라집니다."
+    if problematic or (conjugated < 2 and not aromatic_rings):
+        reason = " CO₂·전하·금속 등 현재 규칙 밖의 전자 구조는 지원하지 않습니다." if problematic else " 현재 규칙이 다루는 공액 발색단을 찾지 못해 참고 범위를 제공하지 않습니다. 실제 흡수가 없다는 뜻은 아닙니다."
+        return _spectrum("UV-Vis", "UV–Vis 흡수 영역 개념도", "nm", 190, 800, [], notice + reason, "unsupported" if problematic else "unprovided")
+    low, high, label = (220, 450, "넓은 공액·방향족 구조의 개념 영역") if conjugated >= 5 or aromatic_rings >= 2 else (200, 350, "공액·방향족 구조의 개념 영역")
+    return _spectrum("UV-Vis", "UV–Vis 흡수 영역 개념도", "nm", 190, 800, [_region(low, high, label)], notice)
 
 
 def educational_spectra(mol: Chem.Mol, mol_h: Chem.Mol) -> list[dict]:

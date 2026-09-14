@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import MoleculeViewer from './components/MoleculeViewer';
 import Sketcher from './components/Sketcher';
 import Spectra from './components/Spectra';
+import SpectrumRanges from './components/SpectrumRanges';
+import { GeometryNotes, HydrogenBondNotes } from './components/ScienceNotes';
+import { legacyNotice, savedMoleculeForDisplay } from './lib/education';
 import type { Measurement, Molecule, MoleculeRequest, Spectrum, Vsepr } from './types';
 import { calculateMeasurement, examples, graphFromMolecule, moleculeDisplayName, selectedVsepr, type EditorGraph } from './lib/chemistry';
 
@@ -38,30 +41,14 @@ function download(data: string, filename: string) { const anchor = document.crea
 function responseError(body: unknown, fallback: string): string {
   if (!body || typeof body !== 'object') return fallback;
   const error = 'error' in body ? body.error : null;
-  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message;
-  if (typeof error === 'string') return error;
-  if ('detail' in body && typeof body.detail === 'string') return body.detail;
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && /[가-힣]/.test(error.message)) return error.message;
+  if (typeof error === 'string' && /[가-힣]/.test(error)) return error;
+  if ('detail' in body && typeof body.detail === 'string' && /[가-힣]/.test(body.detail)) return body.detail;
   return fallback;
 }
 
-function spectrumPosition(spectrum: Spectrum, position: number): number {
-  const span = spectrum.xMax - spectrum.xMin || 1;
-  const fraction = Math.max(0, Math.min(1, (position - spectrum.xMin) / span));
-  return (spectrum.kind.toUpperCase().includes('IR') || spectrum.kind.toUpperCase().includes('NMR')) ? 1 - fraction : fraction;
-}
-
 function CardSpectrum({ spectrum }: { spectrum: Spectrum }) {
-  const peakRows = spectrum.peaks.slice(0, 4);
-  return <section className="study-spectrum">
-    <div className="study-spectrum-title"><strong>{spectrum.kind}</strong><span>{spectrum.title}</span><em>{spectrum.xMin}–{spectrum.xMax} {spectrum.unit}</em></div>
-    <svg viewBox="0 0 360 95" role="img" aria-label={`${spectrum.kind} 예측 스펙트럼`} preserveAspectRatio="none">
-      {[20, 42, 64].map((y) => <line key={y} x1="12" x2="348" y1={y} y2={y} stroke="#e3ece7" strokeWidth="1" strokeDasharray="2 3" />)}
-      <line x1="12" x2="348" y1="75" y2="75" stroke="#afc1ba" strokeWidth="1" />
-      {spectrum.peaks.map((peak, index) => { const x = 12 + spectrumPosition(spectrum, peak.position) * 336; const intensity = Math.max(.08, Math.min(1, peak.intensity > 1 ? peak.intensity / 100 : peak.intensity)); const y = 75 - intensity * 57; return <g key={`${peak.position}-${index}`}><line stroke="#16867d" strokeWidth="1.4" x1={x} x2={x} y1="75" y2={y} /><text x={x} y={y - 4} textAnchor="middle" fill="#48736f" fontSize="7" fontFamily="monospace">{peak.position}</text></g>; })}
-      {!spectrum.peaks.length && <text x="180" y="45" textAnchor="middle" fill="#48736f" fontSize="9">제공 가능한 피크 없음</text>}
-    </svg>
-    <div className="study-peak-table">{peakRows.map((peak, index) => <span key={`${peak.position}-${index}`}><b>{peak.position} {spectrum.unit}</b><i>{peak.range ? `${peak.range[0]}–${peak.range[1]} ${spectrum.unit}` : peak.label}</i><small>{peak.range ? peak.label : ''}</small></span>)}</div>
-  </section>;
+  return <section className="study-spectrum"><SpectrumRanges spectrum={spectrum} /></section>;
 }
 
 function VseprDiagram({ vsepr }: { vsepr: Vsepr }) {
@@ -100,9 +87,9 @@ function StudyCard({ molecule, notes, measurements, vsepr, image, cardRef }: { m
   const structureSvg = molecule.svg ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(molecule.svg)}` : '';
   return <article ref={cardRef} className="study-card" aria-hidden="true">
     <header><div className="study-mark">MS</div><div><small>MOLECULE STUDIO · STUDY CARD</small><h1>{moleculeDisplayName(molecule.name)}</h1><p>{molecule.formula} · {molecule.molWeight.toFixed(2)} g/mol</p></div></header>
-    <div className="study-main"><div className="study-visual"><h3>3D 구조</h3>{image ? <img src={image} alt="3D 분자 구조" /> : <div className="study-placeholder">3D molecular view</div>}</div><div className="study-visual two-d"><h3>2D 구조</h3>{structureSvg ? <img src={structureSvg} alt="2D 분자 구조" /> : <div className="study-placeholder">2D structure</div>}</div><div className="study-data"><h3>구조 표기</h3><code>{molecule.smiles}</code><h3>VSEPR</h3><p>{vsepr ? `${vsepr.notation} · ${koreanVsepr(vsepr.shape)}` : '선택 원자 없음'}</p><h3>측정</h3>{measurements.length ? measurements.map((item) => <p key={`${item.kind}-${item.atoms.join('-')}`}>{item.label}</p>) : <p>저장된 측정값 없음</p>}</div></div>
-    <section className="study-spectra"><div className="study-section-heading"><h3>예측 스펙트럼</h3><p>구조 기반 교육용 예측값 · 실제 기기 측정값을 대신하지 않습니다.</p></div>{molecule.spectra.length ? <div className="study-spectrum-grid">{molecule.spectra.slice(0, 4).map((spectrum, index) => <CardSpectrum key={`${spectrum.kind}-${index}`} spectrum={spectrum} />)}</div> : <p className="study-empty">제공된 예측 스펙트럼이 없습니다.</p>}</section>
-    <div className="study-bottom"><div><h3>학습 노트</h3><p>{notes || '핵심 관찰을 여기에 기록하세요.'}</p></div><div><h3>계산 방법과 한계</h3><p>3D 구조: {molecule.method}. 오비탈 표시는 혼성화 기반 개념도이며 양자화학 오비탈 계산 결과가 아닙니다.</p></div></div>
+    <div className="study-main"><div className="study-visual"><h3>3D 구조</h3>{image ? <img src={image} alt="3D 분자 구조" /> : <div className="study-placeholder">3D molecular view</div>}</div><div className="study-visual two-d"><h3>2D 구조</h3>{structureSvg ? <img src={structureSvg} alt="2D 분자 구조" /> : <div className="study-placeholder">2D structure</div>}</div><div className="study-data"><h3>구조 표기</h3><code>{molecule.smiles}</code><h3>VSEPR</h3><p>{vsepr ? `${vsepr.supported ? vsepr.notation : '판정 보류'} · ${koreanVsepr(vsepr.shape)}` : '선택 원자 없음'}</p>{vsepr && <p>{vsepr.explanation}</p>}<GeometryNotes molecule={molecule} vsepr={vsepr} /><h3>현재 모델 좌표의 측정</h3>{measurements.length ? measurements.map((item) => <p key={`${item.kind}-${item.atoms.join('-')}`}>{item.label}</p>) : <p>저장된 측정값 없음</p>}</div></div>
+    <section className="study-spectra"><div className="study-section-heading"><h3>분광 참고 범위</h3><p>구조 규칙의 참고 구간 · 실제 피크 위치·강도·적분을 계산하지 않습니다.</p></div>{molecule.spectra.length ? <div className="study-spectrum-grid">{molecule.spectra.slice(0, 4).map((spectrum, index) => <CardSpectrum key={`${spectrum.kind}-${index}`} spectrum={spectrum} />)}</div> : <p className="study-empty">참고 범위 미제공</p>}</section>
+    <HydrogenBondNotes molecule={molecule} compact /><div className="study-bottom"><div><h3>학습 노트</h3><p>{notes || '핵심 관찰을 여기에 기록하세요.'}</p></div><div><h3>계산 방법과 한계</h3><p>모델 생성: {molecule.method}. 거리·각도는 현재 좌표의 계산값입니다. 각도 측정에서 두 번째 원자가 꼭짓점입니다. 오비탈 표시는 혼성화 기반 개념도이며 양자화학 오비탈 계산 결과가 아닙니다.</p>{molecule.warnings.map((warning) => <p key={warning}>{warning}</p>)}</div></div>
   </article>;
 }
 
@@ -126,6 +113,7 @@ export default function App() {
   const [storageProblem, setStorageProblem] = useState(initialStorageProblem);
   const [collectionOpen, setCollectionOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [analysisFailed, setAnalysisFailed] = useState(false);
   const [viewerCapture, setViewerCapture] = useState<(() => string) | null>(null);
   const [captureImage, setCaptureImage] = useState('');
   const abortRef = useRef<AbortController | null>(null);
@@ -139,7 +127,7 @@ export default function App() {
     const requestSequence = ++requestSequenceRef.current;
     let timedOut = false;
     const timeoutId = window.setTimeout(() => { timedOut = true; controller.abort(); }, 60_000);
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setAnalysisFailed(false);
     try {
       const response = await fetch('/api/molecule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller.signal });
       const body = await response.json().catch(() => null);
@@ -147,14 +135,15 @@ export default function App() {
       const next = (body?.molecule ?? body) as Molecule;
       if (!next?.atoms || !next?.bonds) throw new Error('분자 데이터 형식이 올바르지 않습니다.');
       if (controller.signal.aborted || requestSequence !== requestSequenceRef.current) return;
-      const nextKey = `${next.smiles}|${next.name}`;
+      const nextKey = next.smiles;
       const changedMolecule = moleculeKeyRef.current !== nextKey;
       moleculeKeyRef.current = nextKey;
-      setMolecule(next); setSmiles(next.smiles || payload.smiles || ''); setGraph(graphFromMolecule(next)); setSelectedAtoms([]); if (changedMolecule) { setMeasurements([]); setNotes(''); } setCaptureImage(''); setResetKey((value) => value + 1);
+      setMolecule(next); setSmiles(next.smiles || payload.smiles || ''); setGraph(graphFromMolecule(next)); setSelectedAtoms([]); setMeasurements([]); if (changedMolecule) setNotes(''); setCaptureImage(''); setResetKey((value) => value + 1);
     } catch (caught) {
       if (requestSequence !== requestSequenceRef.current) return;
+      if (timedOut || (caught as Error).name !== 'AbortError') setAnalysisFailed(true);
       if (timedOut) setError('분자 계산이 60초 안에 끝나지 않았습니다. 구조를 단순하게 하거나 다시 시도해 주세요.');
-      else if ((caught as Error).name !== 'AbortError') setError((caught as Error).message || '분석 중 오류가 발생했습니다.');
+      else if ((caught as Error).name !== 'AbortError') setError(/[가-힣]/.test((caught as Error).message) ? (caught as Error).message : '서버에 연결하지 못했습니다. 연결 상태를 확인하고 다시 분석해 주세요.');
     } finally {
       window.clearTimeout(timeoutId);
       if (requestSequence === requestSequenceRef.current) setLoading(false);
@@ -183,7 +172,14 @@ export default function App() {
     if (problem) { setStorageProblem(problem); setError(problem); return; }
     setStorageProblem(''); setCollection(next); setCollectionOpen(true);
   };
-  const loadEntry = (entry: SavedEntry) => { moleculeKeyRef.current = `${entry.molecule.smiles}|${entry.molecule.name}`; setMolecule(entry.molecule); setGraph(graphFromMolecule(entry.molecule)); setSmiles(entry.molecule.smiles); setNotes(entry.notes); setMeasurements(entry.measurements); setSelectedAtoms([]); setCollectionOpen(false); setResetKey((value) => value + 1); };
+  const loadEntry = (entry: SavedEntry) => {
+    abortRef.current?.abort(); requestSequenceRef.current += 1;
+    moleculeKeyRef.current = entry.molecule.smiles;
+    setMolecule(savedMoleculeForDisplay(entry.molecule)); setGraph(graphFromMolecule(entry.molecule));
+    setSmiles(entry.molecule.smiles); setNotes(entry.notes); setMeasurements(entry.measurements);
+    setSelectedAtoms([]); setCollectionOpen(false); setLoading(false); setError(''); setAnalysisFailed(false);
+    setCaptureImage(''); setResetKey((value) => value + 1);
+  };
   const removeEntry = (id: string) => { const next = collection.filter((entry) => entry.id !== id); const problem = saveCollection(next); if (problem) { setStorageProblem(problem); setError(problem); return; } setStorageProblem(''); setCollection(next); };
   const importMol = async (file?: File) => { if (!file) return; try { await request({ molblock: await file.text(), name: file.name.replace(/\.[^.]+$/, '') }); } catch { /* request owns display */ } };
   const exportCard = async () => {
@@ -209,12 +205,12 @@ export default function App() {
       </aside>
       <section className="viewer-column"><div className="viewer-toolbar"><div className="mode-switch" aria-label="원자 선택 모드"><button className={mode === 'inspect' ? 'selected' : ''} onClick={() => chooseMode('inspect')}><ScanSearch size={15} /> 원자 보기</button><button className={mode === 'distance' ? 'selected' : ''} onClick={() => chooseMode('distance')}><Ruler size={15} /> 거리</button><button className={mode === 'angle' ? 'selected' : ''} onClick={() => chooseMode('angle')}>∠ 각도</button></div><div className="viewer-options"><label title="원자 식별 ID와 원소 기호 표시"><input type="checkbox" checked={showLabels} onChange={(event) => setShowLabels(event.target.checked)} /> 원자 라벨</label><label><input type="checkbox" checked={showHydrogens} onChange={(event) => setShowHydrogens(event.target.checked)} /> H 표시</label><label><input type="checkbox" checked={showOrbitals} onChange={(event) => setShowOrbitals(event.target.checked)} /> 오비탈</label><button onClick={() => setResetKey((value) => value + 1)} aria-label="3D 시점 초기화"><RotateCcw size={16} /></button></div></div>
         <div className="viewer-stage">{loading && <div className="viewer-loading"><LoaderCircle className="spin" size={25} /> 구조를 계산하고 있습니다</div>}<MoleculeViewer molecule={molecule} mode={mode} selectedAtoms={selectedAtoms} onAtomClick={atomClick} showHydrogens={showHydrogens} showLabels={showLabels} showOrbitals={showOrbitals} resetKey={resetKey} onCaptureReady={(capture) => setViewerCapture(() => capture)} />{!molecule && !loading && <div className="viewer-empty"><Sparkles size={24} /><p>SMILES를 입력하거나 구조를 그려보세요.</p></div>}</div>
-        {error && <div className="error-banner"><span>{error}</span><button onClick={() => setError('')} aria-label="오류 닫기"><X size={16} /></button></div>}
-        <section className="measurement-strip"><div><span className="eyebrow">MEASURE</span><strong>{mode === 'inspect' ? '원자를 클릭해 구조를 살펴보세요' : mode === 'distance' ? '원자 2개를 선택하세요' : '원자 3개를 차례로 선택하세요'}</strong></div>{currentMeasurement ? <><b>{currentMeasurement.label}</b><button onClick={() => setMeasurements((items) => items.some((item) => item.label === currentMeasurement.label) ? items : [...items, currentMeasurement])}><Plus size={15} /> 기록</button></> : <span className="muted">선택 {selectedAtoms.length}/{mode === 'angle' ? 3 : mode === 'distance' ? 2 : 1}</span>}</section>
+        {error && <div className="error-banner" role="alert"><span>{analysisFailed && molecule && <strong>입력 분석 실패 — 아래는 이전 분석 결과입니다. </strong>}{error}</span><button onClick={() => setError('')} aria-label="오류 닫기"><X size={16} /></button></div>}
+        <section className="measurement-strip"><div><span className="eyebrow">현재 모델 좌표에서 계산</span><strong>{mode === 'inspect' ? '원자를 클릭해 구조를 살펴보세요' : mode === 'distance' ? '원자 2개를 선택하세요' : '원자 3개 선택 · 두 번째 원자가 각의 꼭짓점'}</strong></div>{currentMeasurement ? <><b>{currentMeasurement.label}</b><button onClick={() => setMeasurements((items) => items.some((item) => item.label === currentMeasurement.label) ? items : [...items, currentMeasurement])}><Plus size={15} /> 기록</button></> : <span className="muted">선택 {selectedAtoms.length}/{mode === 'angle' ? 3 : mode === 'distance' ? 2 : 1}</span>}</section>
         <Spectra spectra={molecule?.spectra ?? []} />
       </section>
-      <aside className="right-column"><section className="panel identity-panel"><span className="eyebrow">MOLECULE</span>{molecule ? <><h1>{moleculeDisplayName(molecule.name)}</h1><p className="formula">{molecule.formula}</p><div className="property-grid"><span>분자량 <b>{molecule.molWeight.toFixed(2)}</b></span><span>원자 수 <b>{molecule.atoms.length}</b></span><span>H-bond donor <b>{molecule.properties.hbd}</b></span><span>H-bond acceptor <b>{molecule.properties.hba}</b></span></div><label className="smiles-readonly">SMILES<code>{molecule.smiles}</code></label>{molecule.warnings?.length ? <p className="warning">{molecule.warnings[0]}</p> : null}</> : <p>분석 결과가 여기에 표시됩니다.</p>}</section>
-        <section className="panel inspector"><div className="panel-title"><div><span className="eyebrow">INSPECT</span><h2>원자와 형태</h2></div></div>{vsepr ? <div className="vsepr"><div className="vsepr-symbol">{vsepr.notation}</div><div><strong>{koreanVsepr(vsepr.shape)}</strong><p>{koreanVsepr(vsepr.electronGeometry)} · 이상각 {vsepr.idealAngles}</p></div><p>{vsepr.explanation}</p><VseprDiagram vsepr={vsepr} /></div> : <p className="muted">3D 모델에서 원자를 클릭하면 VSEPR 형태와 전자쌍 정보를 보여줍니다.</p>}{molecule ? <div className="atom-picker"><div className="atom-picker-head"><strong>원자 선택</strong><button onClick={() => setShowAllAtomPicker((value) => !value)} disabled={!showHydrogens || !molecule.atoms.some((atom) => atom.element === 'H')}>{showHydrogens && showAllAtomPicker ? '무거운 원자' : '전체 원자'}</button></div><p>버튼으로 원자를 선택할 수 있습니다.</p><div className="atom-picker-list" aria-label="원자 선택 목록">{pickerAtoms.map((atom) => <button key={atom.id} className={selectedAtoms.includes(atom.id) ? 'selected' : ''} onClick={() => atomClick(atom.id)} aria-label={`${atom.id}번 ${atom.element} 원자 선택`}><b>{atom.id}</b><span>{atom.element}</span></button>)}</div>{!showHydrogens && molecule.atoms.some((atom) => atom.element === 'H') ? <small>수소 표시는 3D 옵션에서 켜면 목록에도 추가됩니다.</small> : null}</div> : null}</section>
+      <aside className="right-column"><section className="panel identity-panel"><span className="eyebrow">MOLECULE</span>{molecule ? <><h1>{moleculeDisplayName(molecule.name)}</h1><p className="formula">{molecule.formula}</p><div className="property-grid"><span>분자량 <b>{molecule.molWeight.toFixed(2)}</b></span><span>원자 수 <b>{molecule.atoms.length}</b></span></div><HydrogenBondNotes molecule={molecule} /><label className="smiles-readonly">SMILES<code>{molecule.smiles}</code></label>{molecule.warnings?.length ? <p className="warning">{molecule.warnings[0]}</p> : null}</> : <p>분석 결과가 여기에 표시됩니다.</p>}</section>
+        <section className="panel inspector"><div className="panel-title"><div><span className="eyebrow">INSPECT</span><h2>원자와 형태</h2></div></div>{vsepr ? <div className="vsepr"><div className="vsepr-symbol">{vsepr.supported ? vsepr.notation : "판정 보류"}</div><div><strong>{koreanVsepr(vsepr.shape)}</strong><p>전자영역 배치: {koreanVsepr(vsepr.electronGeometry)}</p></div><p>{vsepr.explanation}</p><VseprDiagram vsepr={vsepr} /><GeometryNotes molecule={molecule!} vsepr={vsepr} /></div> : <p className="muted">{molecule && molecule.analysisVersion !== 2 ? legacyNotice : "3D 모델에서 원자를 클릭하면 VSEPR 형태와 전자쌍 정보를 보여줍니다."}</p>}{molecule ? <div className="atom-picker"><div className="atom-picker-head"><strong>원자 선택</strong><button onClick={() => setShowAllAtomPicker((value) => !value)} disabled={!showHydrogens || !molecule.atoms.some((atom) => atom.element === 'H')}>{showHydrogens && showAllAtomPicker ? '무거운 원자' : '전체 원자'}</button></div><p>버튼으로 원자를 선택할 수 있습니다.</p><div className="atom-picker-list" aria-label="원자 선택 목록">{pickerAtoms.map((atom) => <button key={atom.id} className={selectedAtoms.includes(atom.id) ? 'selected' : ''} onClick={() => atomClick(atom.id)} aria-label={`${atom.id}번 ${atom.element} 원자 선택`}><b>{atom.id}</b><span>{atom.element}</span></button>)}</div>{!showHydrogens && molecule.atoms.some((atom) => atom.element === 'H') ? <small>수소 표시는 3D 옵션에서 켜면 목록에도 추가됩니다.</small> : null}</div> : null}</section>
         <section className="panel notes"><div className="panel-title"><div><span className="eyebrow">NOTEBOOK</span><h2>학습 노트</h2></div><button className="icon-button" onClick={saveEntry} disabled={!molecule} aria-label="컬렉션에 저장"><FolderHeart size={17} /></button></div><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="관찰한 점, 결합각, 스펙트럼의 근거를 메모하세요…" aria-label="학습 노트" />{measurements.length ? <div className="saved-measurements">{measurements.map((item) => <span key={`${item.kind}-${item.atoms.join('-')}`}>{item.label}<button onClick={() => setMeasurements((items) => items.filter((other) => other.label !== item.label))} aria-label="측정 삭제"><X size={12} /></button></span>)}</div> : null}<button className="secondary full" onClick={saveEntry} disabled={!molecule}><FolderHeart size={16} /> 현재 분자를 컬렉션에 저장</button></section>
       </aside>
     </div>

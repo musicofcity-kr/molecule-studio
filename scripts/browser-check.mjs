@@ -2,6 +2,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { chromium } from '@playwright/test';
+import { scienceBrowserCases } from './science-browser-cases.mjs';
 
 const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:5173';
 const evidenceDir = path.resolve(process.env.EVIDENCE_DIR || 'evidence/browser');
@@ -329,6 +330,8 @@ try {
     assert(bytes > 1000, `study-card PNG is unexpectedly small: ${bytes} bytes`);
     return { file: target, bytes, pixels: await verifyPngContent(page, target) };
   });
+
+  await scienceBrowserCases({ page, runCase, submitSmiles, setMode, selectAtom, waitForMolecule, verifyPngContent, evidenceDir });
 
   await page.setViewportSize({ width: 390, height: 844 });
   await runCase('mobile water measurement, orbitals, and PNG', async () => {

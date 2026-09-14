@@ -21,13 +21,15 @@ VSEPR is reported per heavy atom, using bonded neighbors as bonding domains; a m
 - two-coordinate neutral oxygen, including water (`AX2E2`);
 - a small set of analogous neutral B, Si, P, S, As, and Se patterns where the local rule is unambiguous.
 
-Water is labeled bent with tetrahedral electron geometry and an educational reference angle of about 104.5°. Ammonia is labeled trigonal pyramidal with tetrahedral electron geometry and an angle of about 107°. OpenStax explains that ammonia has one lone pair and three bonds in a tetrahedral electron arrangement, and that the molecular shape is trigonal pyramidal with an H-N-H angle below the ideal 109.5°.
+Water is labeled bent (AX2E2) and ammonia trigonal pyramidal (AX3E), both with tetrahedral electron geometry. `idealAngles` describes the ideal electron-domain arrangement (109.5°), not a molecule-specific measured angle. Only water receives separate NIST gas-phase equilibrium reference data: H–O–H 104.4776° and O–H 0.958 Å, attributed to Hoy/Bunker (1979). These references never replace generated coordinates. The measurement tool calculates the current model's geometry; the second of three selected atoms is the angle vertex. The screen and exported card use the same explanatory components.
 
 The classifier returns `supported: false` with a reason for terminal atoms, radicals, charged centers, transition-metal centers, and resonance or hypervalent patterns outside these rules. This is deliberate abstention. A local Lewis/VSEPR rule is not a general coordination-chemistry or electronic-structure method.
 
 ## Educational spectrum regions
 
-All returned spectrum peaks are schematic markers placed at the midpoint of a broad reference range. `intensity` only supports drawing a legible teaching graphic. It is not absorbance, transmittance, molar absorptivity, or an experimentally predicted relative intensity.
+All returned spectrum entries are broad reference intervals displayed as range bars, using the same component on screen and in the exported card. The compatibility field `peaks` now contains only `range` and `label`; no calculated position, intensity, or atom count is returned. Bar placement and height do not represent experimental intensity or integration. Status distinguishes available, partially supported, unsupported rules, no relevant atoms, and no supplied range. Missing data never establishes absence of absorption.
+
+Carbonyl classification is shared by IR, ¹³C NMR and UV-Vis. Ketone, aldehyde, carboxylic acid, ester and amide require matching neighboring atoms, bond orders, hydrogen counts and supported charge/aromaticity. CO₂, ketenes, acyl halides, carboxylates and anhydrides are not assigned a ketone default. CO₂ has no supplied IR, ¹³C NMR or UV-Vis range in this rule set; its ¹H state indicates that no hydrogen atoms are present.
 
 ### IR
 
@@ -35,11 +37,17 @@ The IR rules recognize a limited set of SMARTS functional groups, including O-H,
 
 ### ¹H and ¹³C NMR
 
-The NMR rules assign each explicit hydrogen or carbon to a broad introductory chemical-shift region. Counts are numbers of matched atoms, not numbers of chemically distinct signals. The result does not infer symmetry/equivalence, splitting, coupling constants, exchange, integration, solvent, concentration, temperature, or stereochemical effects. The ¹³C ranges follow the broad carbon-environment intervals in the cited LibreTexts table, such as alkyl, heteroatom-bound, alkene/aromatic, acid-derivative carbonyl, aldehyde, and ketone regions.
+The NMR rules map supported hydrogen or carbon environments to broad introductory chemical-shift regions and deduplicate identical regions. They do not return atom counts or infer symmetry/equivalence, signal counts, splitting, coupling constants, exchange, integration, solvent, concentration, temperature, or stereochemical effects. The ¹³C ranges use broad carbon-environment intervals such as alkyl, heteroatom-bound, alkene/aromatic, acid-derivative carbonyl, aldehyde, and ketone regions.
 
 ### UV-Vis
 
 UV-Vis is returned only as a conceptual region when a supported neutral, main-group conjugated or aromatic pi system is detected. The displayed band says that such chromophores commonly absorb in the near-UV/visible domain; it is not a predicted λmax. The API returns `supported: false` and no peak for molecules without a recognized conjugated chromophore, and for charged or transition-metal chromophores that require a more suitable electronic-structure method. Educational sources emphasize that UV-Vis is mainly informative for conjugated pi systems and that increased conjugation shifts absorption toward longer wavelengths.
+
+## Hydrogen-bond descriptors and saved analyses
+
+Raw `Lipinski.NumHDonors` / `NumHAcceptors` values are preserved. RDKit 2026.03.6 delegates these to SMARTS-based `CalcNumHBD` / `CalcNumHBA`. The normalized `Chem.RemoveHs` input retains implicit hydrogen information; explicit hydrogens for 3D are added separately. Water's H₂ oxygen does not match these donor/acceptor definitions, so its raw counts remain 0/0. Water can nevertheless act as both a hydrogen-bond donor and acceptor. The UI explains this distinction, the functions, installed version, hydrogen handling and source. Counts describe matching sites, not simultaneous bonds or every possible interaction role.
+
+`analysisVersion: 2` identifies the corrected explanatory data. Older saved analyses keep their original coordinates, notes and measurements in storage. On display, old spectra/VSEPR/descriptors are withheld with a Korean notice; reanalysis supplies current explanations and clears measurements belonging to the previous coordinates. Notes persist when the canonical structure is unchanged. Loading a saved entry invalidates pending requests so that late responses cannot replace it.
 
 ## Anonymous endpoint bounds
 
@@ -50,6 +58,9 @@ UV-Vis is returned only as a conceptual region when a supported neutral, main-gr
 ## Sources
 
 - RDKit, [Getting Started with the RDKit in Python](https://www.rdkit.org/docs/GettingStartedInPython.html) — parsing, explicit hydrogens, ETKDGv3, MMFF, writing mol blocks, and descriptors.
+- RDKit, [2026.03.6 Lipinski descriptor source](https://raw.githubusercontent.com/rdkit/rdkit/Release_2026_03_6/Code/GraphMol/Descriptors/Lipinski.cpp) — exact donor/acceptor SMARTS definitions used by the pinned build.
+- IUPAC Gold Book, [Ketones](https://goldbook.iupac.org/terms/view/K03386/plain) — a carbonyl carbon bonded to two carbon atoms.
+- NIST CCCBDB, [Water experimental geometry](https://cccbdb.nist.gov/expgeom2x.asp?casno=7732185) — molecule-specific equilibrium angle and bond length.
 - RDKit, [`rdkit.Chem.rdDistGeom` API](https://www.rdkit.org/docs/source/rdkit.Chem.rdDistGeom.html) — ETKDGv3, bounded embedding parameters, and fixed random seeds.
 - RDKit, [`rdkit.Chem.rdmolfiles` API](https://www.rdkit.org/docs/source/rdkit.Chem.rdmolfiles.html) — strict mol-block parsing and sanitization options.
 - OpenStax, [Chemistry: Atoms First 2e, Molecular Structure and Polarity](https://openstax.org/books/chemistry-atoms-first-2e/pages/4-6-molecular-structure-and-polarity) — electron-domain geometries and water/ammonia VSEPR examples.

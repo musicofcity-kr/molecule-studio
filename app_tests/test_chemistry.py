@@ -12,6 +12,7 @@ from chemistry.vsepr import classify_vsepr
 MOLECULE_KEYS = {
     "name", "smiles", "formula", "molWeight", "atoms", "bonds", "molblock",
     "svg", "method", "warnings", "vsepr", "spectra", "properties", "sources",
+    "analysisVersion", "hydrogenBonding", "geometryReference",
 }
 
 
@@ -123,26 +124,26 @@ class SpectrumTests(unittest.TestCase):
         for spectrum in result["spectra"]:
             for peak in spectrum["peaks"]:
                 self.assertLessEqual(spectrum["xMin"], peak["range"][0])
-                self.assertLessEqual(peak["range"][0], peak["position"])
-                self.assertLessEqual(peak["position"], peak["range"][1])
+                self.assertLess(peak["range"][0], peak["range"][1])
                 self.assertLessEqual(peak["range"][1], spectrum["xMax"])
-                self.assertGreaterEqual(peak["intensity"], 0)
-                self.assertLessEqual(peak["intensity"], 1)
+                self.assertNotIn("position", peak)
+                self.assertNotIn("intensity", peak)
+                self.assertNotIn("count", peak)
         ir_labels = " ".join(peak["label"] for peak in result["spectra"][0]["peaks"])
-        self.assertIn("ester C=O", ir_labels)
+        self.assertIn("에스터 C=O", ir_labels)
 
     def test_uv_vis_abstains_without_supported_chromophore(self) -> None:
         ethanol = build_molecule({"smiles": "CCO"})
         uv = next(item for item in ethanol["spectra"] if item["kind"] == "UV-Vis")
         self.assertFalse(uv["supported"])
         self.assertEqual(uv["peaks"], [])
-        self.assertIn("No estimate", uv["notice"])
+        self.assertEqual(uv["status"], "unprovided")
 
         benzene = build_molecule({"smiles": "c1ccccc1"})
         uv = next(item for item in benzene["spectra"] if item["kind"] == "UV-Vis")
         self.assertTrue(uv["supported"])
         self.assertTrue(uv["peaks"])
-        self.assertIn("conceptual", uv["notice"].lower())
+        self.assertIn("개념도", uv["notice"])
 
 
 class InputBoundaryTests(unittest.TestCase):
@@ -193,12 +194,12 @@ class InputBoundaryTests(unittest.TestCase):
     def test_charged_and_transition_centers_explicitly_unsupported(self) -> None:
         charged = build_molecule({"smiles": "[NH4+]"})
         self.assertFalse(charged["vsepr"][0]["supported"])
-        self.assertIn("formal charge", charged["vsepr"][0]["explanation"])
+        self.assertIn("형식 전하", charged["vsepr"][0]["explanation"])
 
         iron = Chem.AddHs(Chem.MolFromSmiles("[Fe]"))
         classification = classify_vsepr(iron)
         self.assertFalse(classification[0]["supported"])
-        self.assertIn("transition-metal", classification[0]["explanation"])
+        self.assertIn("전이 금속", classification[0]["explanation"])
 
 
 if __name__ == "__main__":

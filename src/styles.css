@@ -56,3 +56,28 @@
 .viewer-options { flex-wrap:wrap; justify-content:flex-end; gap:5px; margin-left:auto; }
 .viewer-options label { display:inline-flex; align-items:center; gap:3px; min-height:32px; cursor:pointer; }
 @media (max-width:480px) { .viewer-options { margin-top:0; } }
+
+.spectrum-name { flex-wrap:wrap; gap:5px; }
+.spectrum-ranges { min-width:0; }
+.range-list { padding-left:22px; margin:10px 0; display:grid; gap:6px; font-size:11px; color:#536976; }
+.range-list li { padding-left:2px; }
+.range-list b { display:inline-block; margin-right:7px; color:#246d63; }
+.range-list span { overflow-wrap:anywhere; }
+.range-scale,.range-notice,.range-empty { color:#536976; font-size:11px; line-height:1.6; margin:8px 0!important; }
+.range-empty { padding:18px 10px; background:#edf3f0; border-radius:8px; }
+.range-notice { padding-top:8px; border-top:1px solid #e0e8e4; }
+.hydrogen-bond-notes { color:#46616c; font-size:11px; line-height:1.65; margin:12px 0; }
+.hydrogen-bond-notes p { margin:6px 0!important; }
+.descriptor-counts { display:grid; gap:4px; padding:8px; border-radius:7px; background:#edf5f0; }
+.hydrogen-bond-notes summary { cursor:pointer; padding:7px 0; color:#217b71; }
+.hydrogen-bond-notes a,.geometry-notes a { color:#217b71; text-decoration:underline; overflow-wrap:anywhere; }
+.descriptor-definition { font-size:10px; }
+.geometry-notes { grid-column:1/-1; font-size:11px; color:#46616c; line-height:1.6; }
+.geometry-notes p { margin:5px 0!important; }
+.geometry-notes small { display:block; letter-spacing:0; font:inherit; color:#61747b; }
+.geometry-reference { padding:9px; background:#edf5f0; border-radius:7px; }
+.study-spectrum .spectrum-ranges text { font-family:inherit; font-size:10px; }
+.study-card .range-list,.study-card .range-notice,.study-card .range-scale { font-size:11px; }
+.study-card .hydrogen-bond-notes { margin:18px 0; }
+.study-card .hydrogen-bond-notes p { font-size:11px; }
+.study-card .geometry-notes small { font-size:10px; letter-spacing:0; }

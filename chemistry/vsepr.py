@@ -15,16 +15,16 @@ TRANSITION_METALS = {
 _GEOMETRIES = {
     (2, 0): ("AX2", "linear", "linear", "180°"),
     (3, 0): ("AX3", "trigonal planar", "trigonal planar", "120°"),
-    (3, 1): ("AX2E", "bent", "trigonal planar", "<120°"),
+    (3, 1): ("AX2E", "bent", "trigonal planar", "120°"),
     (4, 0): ("AX4", "tetrahedral", "tetrahedral", "109.5°"),
-    (4, 1): ("AX3E", "trigonal pyramidal", "tetrahedral", "about 107°"),
-    (4, 2): ("AX2E2", "bent", "tetrahedral", "about 104.5° for H2O"),
+    (4, 1): ("AX3E", "trigonal pyramidal", "tetrahedral", "109.5°"),
+    (4, 2): ("AX2E2", "bent", "tetrahedral", "109.5°"),
     (5, 0): ("AX5", "trigonal bipyramidal", "trigonal bipyramidal", "90°, 120°, 180°"),
-    (5, 1): ("AX4E", "seesaw", "trigonal bipyramidal", "<90°, <120°, 180°"),
-    (5, 2): ("AX3E2", "T-shaped", "trigonal bipyramidal", "about 90°, 180°"),
-    (5, 3): ("AX2E3", "linear", "trigonal bipyramidal", "180°"),
+    (5, 1): ("AX4E", "seesaw", "trigonal bipyramidal", "90°, 120°, 180°"),
+    (5, 2): ("AX3E2", "T-shaped", "trigonal bipyramidal", "90°, 120°, 180°"),
+    (5, 3): ("AX2E3", "linear", "trigonal bipyramidal", "90°, 120°, 180°"),
     (6, 0): ("AX6", "octahedral", "octahedral", "90°, 180°"),
-    (6, 1): ("AX5E", "square pyramidal", "octahedral", "about 90°, 180°"),
+    (6, 1): ("AX5E", "square pyramidal", "octahedral", "90°, 180°"),
     (6, 2): ("AX4E2", "square planar", "octahedral", "90°, 180°"),
 }
 
@@ -85,22 +85,22 @@ def classify_vsepr(mol: Chem.Mol) -> list[dict]:
         if symbol in TRANSITION_METALS:
             results.append(_unsupported(
                 atom,
-                f"{symbol} is a transition-metal center; simple main-group VSEPR rules are not applied.",
+                f"{symbol}은 전이 금속 중심입니다. 단순 주족 원소 VSEPR 규칙으로 판정하지 않습니다.",
             ))
             continue
         if atom.GetFormalCharge() != 0:
             results.append(_unsupported(
                 atom,
-                "This atom carries formal charge; this conservative local classifier does not assign charged centers.",
+                "형식 전하가 있는 원자입니다. 현재 VSEPR 규칙은 전하를 띤 중심 원자를 판정하지 않습니다.",
             ))
             continue
         if atom.GetNumRadicalElectrons():
-            results.append(_unsupported(atom, "Radical centers are outside this local VSEPR rule set."))
+            results.append(_unsupported(atom, "라디칼 중심은 현재 VSEPR 규칙의 지원 범위 밖입니다."))
             continue
         if atom.GetDegree() < 2:
             results.append(_unsupported(
                 atom,
-                "A terminal atom has only one bonded neighbor, so a local molecular shape is not informative.",
+                "이웃 원자가 하나 이하인 말단 원자이므로 국소 분자 형태를 판정하지 않습니다.",
             ))
             continue
 
@@ -108,14 +108,14 @@ def classify_vsepr(mol: Chem.Mol) -> list[dict]:
         if model is None or model not in _GEOMETRIES:
             results.append(_unsupported(
                 atom,
-                "The bonding or resonance pattern is outside the covered neutral main-group rules.",
+                "아마이드 등의 결합·공명 환경은 현재 중성 주족 원소 규칙의 지원 범위 밖이므로 판정을 보류합니다.",
             ))
             continue
         domains, lone_pairs = model
         notation, shape, electron_geometry, angles = _GEOMETRIES[(domains, lone_pairs)]
         explanation = (
-            f"Atom {atom.GetIdx()} has {atom.GetDegree()} bonded atoms and {lone_pairs} local lone-pair "
-            f"domain{'s' if lone_pairs != 1 else ''}; multiple bonds count as one VSEPR domain."
+            f"원자 ID {atom.GetIdx()}: 결합한 원자 {atom.GetDegree()}개, 비공유 전자쌍 영역 {lone_pairs}개입니다. "
+            "다중 결합도 전자영역 하나로 셉니다. 전자영역 이상각은 이상 기하의 값이며 현재 모델의 결합각이나 실험값이 아닙니다."
         )
         results.append({
             "atomId": atom.GetIdx(),

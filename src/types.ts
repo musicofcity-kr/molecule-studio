@@ -1,9 +1,11 @@
 export type Atom = { id: number; element: string; x: number; y: number; z: number; charge: number; hybridization: string; neighbors: number[] };
 export type Bond = { a: number; b: number; order: number; length: number };
 export type Vsepr = { atomId: number; notation: string; shape: string; electronGeometry: string; lonePairs: number | null; idealAngles: string; explanation: string; supported: boolean };
-export type Peak = { position: number; intensity: number; label: string; range?: [number, number]; count?: number };
-export type Spectrum = { kind: string; title: string; unit: string; xMin: number; xMax: number; peaks: Peak[]; notice: string; supported: boolean };
-export type Molecule = { name: string; smiles: string; formula: string; molWeight: number; atoms: Atom[]; bonds: Bond[]; molblock: string; svg: string; method: string; warnings: string[]; vsepr: Vsepr[]; spectra: Spectrum[]; properties: { hbd: number; hba: number; logP: number; tpsa: number }; sources: { title: string; url: string }[] };
+export type Peak = { label: string; range?: [number, number]; position?: number; intensity?: number; count?: number };
+export type Spectrum = { kind: string; title: string; unit: string; xMin: number; xMax: number; peaks: Peak[]; notice: string; supported: boolean; status?: 'available' | 'partial' | 'unsupported' | 'not_applicable' | 'unprovided' };
+export type HydrogenBonding = { note: string; definition: string; hydrogenHandling: string; library: string; functions: string; source: string };
+export type GeometryReference = { title: string; angle: number; length: number; angleUnit: string; lengthUnit: string; source: string; url: string; notice: string };
+export type Molecule = { analysisVersion?: number; hydrogenBonding?: HydrogenBonding; geometryReference?: GeometryReference | null; name: string; smiles: string; formula: string; molWeight: number; atoms: Atom[]; bonds: Bond[]; molblock: string; svg: string; method: string; warnings: string[]; vsepr: Vsepr[]; spectra: Spectrum[]; properties: { hbd: number; hba: number; logP: number; tpsa: number }; sources: { title: string; url: string }[] };
 export type EditorAtom = { id: number; element: string; x: number; y: number; charge?: number };
 export type EditorBond = { a: number; b: number; order: number };
 export type MoleculeRequest = { smiles?: string; molblock?: string; name?: string; graph?: { atoms: EditorAtom[]; bonds: EditorBond[] } };
