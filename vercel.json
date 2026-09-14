@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite", "buildCommand": "npm run build", "outputDirectory": "dist",
+  "framework": "vite", "buildCommand": "npm run build && python3 scripts/prepare-vercel-native.py", "outputDirectory": "dist",
   "functions": { "api/molecule.py": { "maxDuration": 60, "excludeFiles": "{node_modules,app_tests,tests,examples,verification,runs,evidence,reviews,.venv,.vercel_python_packages}/**" } },
   "headers": [{ "source": "/(.*)", "headers": [
     { "key": "X-Content-Type-Options", "value": "nosniff" },

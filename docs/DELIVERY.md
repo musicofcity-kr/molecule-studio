@@ -8,7 +8,9 @@
 
 정적 빌더는 루트 requirements.txt를 `.vercel_python_packages`에 설치하고, Python 함수 빌더는 별도 Python 3.13 환경에서 의존성을 준비합니다. 기존 함수 제외 목록에 첫 폴더가 없어 중복 포함되는 경로를 확인했습니다. `vercel.json`의 함수 `excludeFiles`에 `.vercel_python_packages/**`를 추가했습니다. RDKit·numpy·Pillow와 앱 코드는 변경하지 않았습니다. 근거는 Vercel 공식 [정적 빌더](https://raw.githubusercontent.com/vercel/vercel/main/packages/static-build/src/index.ts) 및 [설치 함수](https://raw.githubusercontent.com/vercel/vercel/main/packages/build-utils/src/fs/run-user-scripts.ts)입니다.
 
-로컬 검증: 포함 경로 회귀 검사, TypeScript, 화학 13개 검사 및 생산 빌드 통과. Linux CPython 3.13 wheel의 압축 해제 합계는 261.69MiB입니다. 이는 의존성 아카이브 측정이며 최종 Vercel 함수 크기 측정이 아닙니다. 진단은 `evidence/vercel-size-fix/diagnosis.json`, 실행 기록은 `runs/59d513708c0f4426820586b1cd88b982/`에 보존했습니다. 연결된 원격 빌드와 운영 검증 결과는 확인 후 갱신합니다.
+로컬 검증: 포함 경로 회귀 검사, TypeScript, 화학 13개 검사 및 생산 빌드 통과. Linux CPython 3.13 wheel의 압축 해제 합계는 261.69MiB입니다. 이는 의존성 아카이브 측정이며 최종 Vercel 함수 크기 측정이 아닙니다. 진단은 `evidence/vercel-size-fix/diagnosis.json`, 실행 기록은 `runs/59d513708c0f4426820586b1cd88b982/`에 보존했습니다.
+
+커밋 `fcf0315`에서 연결된 Vercel 빌드가 성공해 용량 오류 해결을 확인했습니다. 이어 실제 API에서 500을 발견했고, 사용자가 제공한 실행 로그에서 RDKit Draw import 시 `libXrender.so.1` 누락을 확인했습니다. `scripts/prepare-vercel-native.py`가 Vercel Linux 빌드에서 Xrender·X11·Xext·expat와 필요한 X11 전이 라이브러리를 `chemistry/_native/`에 포함합니다. 시스템 패키지 라이선스와 해시·로드 순서도 기록합니다. `chemistry/native.py`가 RDKit Draw import 전에 이 라이브러리를 로드합니다. glibc를 복사하지 않으며 Windows에서는 적용하지 않습니다. 최종 원격 API·브라우저 검증은 별도로 진행합니다.
 
 ## 구현과 수정
 

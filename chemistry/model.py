@@ -9,6 +9,10 @@ from typing import Any
 
 from rdkit import Chem
 from rdkit.Chem import AllChem, Crippen, Descriptors, Lipinski, rdDepictor, rdMolDescriptors
+
+from .native import load_drawing_libraries
+
+load_drawing_libraries()
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit import rdBase
 

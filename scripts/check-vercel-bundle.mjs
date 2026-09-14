@@ -17,6 +17,7 @@ const excluded = [
 const retained = [
   'api/molecule.py', 'chemistry/model.py', 'chemistry/vsepr.py',
   'chemistry/spectra.py', 'requirements.txt',
+  'chemistry/_native/libXrender.so.1', 'chemistry/_native/manifest.json',
   '_vendor/rdkit/Chem/rdchem.cpython-313-x86_64-linux-gnu.so',
   '_vendor/rdkit/Data/FragmentDescriptors.csv',
   '_vendor/rdkit.libs/libRDKitGraphMol.so',
