@@ -1,7 +1,7 @@
 {
   "schema_version": "4.0",
   "task_id": "molecule-studio-public-20260914",
-  "request_reference": "2026-09-14 user: 2D/3D molecular modeling, measurement, VSEPR, orbitals, spectra, PNG, GitHub and public Vercel; SOL/TERRA/LUNA delegation",
+  "request_reference": "2026-09-14 user: molecular modeling app and GitHub publication; subsequent explicit user instruction defers Vercel deployment. Current completion scope is local app and public GitHub sources.",
   "permissions": {
     "local_checks": true
   },
@@ -88,7 +88,7 @@
     },
     {
       "id": "AC-PUBLISH",
-      "criterion": "Reviewed sources are pushed to GitHub; public Vercel production URL loads anonymously and its deployed chemistry API and principal UI flow work.",
+      "criterion": "Reviewed application sources are pushed to the public GitHub repository and the remote commit is verified. Vercel deployment is deferred by the user's explicit instruction and is outside this completion scope.",
       "method": "review",
       "reviewer": "agent"
     }

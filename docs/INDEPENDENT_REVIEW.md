@@ -26,3 +26,5 @@ Two independent agents reviewed the chemistry/API and UI/export paths. The main 
 - Browser checks select visible atom controls, synchronize the matching API response, and verify PNG content pixels, including mobile exports.
 
 The final local browser report finished at `2026-09-14T02:06:24.522Z`: 13/13 passed and no uncaught page errors. An independent agent inspected final desktop/mobile screenshots and both study-card PNGs and returned AC-REVIEW PASS. Vercel production verification remains separate and incomplete because the connected API returned HTTP 403 for production deployment creation.
+
+The user subsequently explicitly deferred Vercel deployment. Current completion therefore covers the verified local application and public GitHub sources. The earlier Vercel failure evidence is retained; no public Vercel runtime is claimed.

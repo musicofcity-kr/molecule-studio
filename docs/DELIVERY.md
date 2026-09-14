@@ -22,10 +22,12 @@ SMILES/MOL/편집 그래프 입력, RDKit 3D 생성, 거리·각도, VSEPR, 오�
 
 - GitHub 공개 소스: https://github.com/musicofcity-kr/molecule-studio
 - 검증한 앱 소스 커밋: `082dcb03ca03626085dad10f0e1e80e9e7415d67`. 원격 `main`과 대조했습니다. 후속 인계 문서 커밋은 이 소스를 바꾸지 않습니다.
-- Vercel 운영 배포: **미완료 — API 403, 운영 배포 생성 권한 부족**. 실제 오류: `You don't have permission to create a Production Deployment for this project.`
+- Vercel 운영 배포: **사용자 요청으로 보류 — 이번 완료 범위에서 제외**. 보류 전 API 403(운영 배포 생성 권한 부족)이 확인됐습니다. 실제 오류: `You don't have permission to create a Production Deployment for this project.`
+- 사용자가 Vercel에서 GitHub 저장소를 직접 연결해 배포할 예정입니다. 저장소의 `vercel.json`에 Vite, `npm run build`, `dist`, Python API 최대 실행시간이 지정되어 있고 `.python-version`은 3.13입니다. 실제 Vercel 빌드와 운영 동작은 아직 검증하지 않았습니다.
 - 최초 연결 도구가 반환한 배포 ID/주소는 배포 조회·빌드 로그·공개 HTTP에서 404/DEPLOYMENT_NOT_FOUND였으므로 성공 증거로 채택하지 않았습니다.
-- 배포 권한이 있는 Vercel 연결을 확보한 뒤 배포하고, 익명 공개 URL·배포된 `/api/molecule`·주요 브라우저 흐름을 검증해야 합니다. 이 단계가 끝나기 전에는 계약 전체 완료로 처리하지 않습니다.
-- 상세 장애물: `evidence/publication.json`. 로컬 계약 검증 결과와 로그: `runs/state.json`의 `verification` 경로. 인계 시 `finish`를 실행하되, AC-PUBLISH 미충족이면 `completed:false`로 보존합니다.
+- 향후 배포를 다시 요청받으면 배포 권한이 있는 Vercel 연결을 확보하고, 익명 공개 URL·배포된 `/api/molecule`·주요 브라우저 흐름을 검증해야 합니다.
+- 상세 기록: `evidence/publication.json`. 보류 전 계약 검증은 로컬 3개 명령과 AC-REVIEW가 통과했고, Vercel을 포함했던 AC-PUBLISH만 실패했습니다. 해당 실패 기록을 보존했습니다.
+- 사용자의 후속 지시에 따라 INTENT·SPEC·PLAN·contract를 로컬 앱과 GitHub 공개 소스로 갱신했습니다. 이 범위의 계약 검증과 최종 완료 기록은 `runs/state.json`의 `verification` 및 `checkpoint` 경로에서 확인합니다. 공개 Vercel 운영을 검증했다는 뜻은 아닙니다.
 
 ## 한계
 
