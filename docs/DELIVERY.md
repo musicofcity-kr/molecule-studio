@@ -10,7 +10,9 @@
 
 로컬 검증: 포함 경로 회귀 검사, TypeScript, 화학 13개 검사 및 생산 빌드 통과. Linux CPython 3.13 wheel의 압축 해제 합계는 261.69MiB입니다. 이는 의존성 아카이브 측정이며 최종 Vercel 함수 크기 측정이 아닙니다. 진단은 `evidence/vercel-size-fix/diagnosis.json`, 실행 기록은 `runs/59d513708c0f4426820586b1cd88b982/`에 보존했습니다.
 
-커밋 `fcf0315`에서 연결된 Vercel 빌드가 성공해 용량 오류 해결을 확인했습니다. 이어 실제 API에서 500을 발견했고, 사용자가 제공한 실행 로그에서 RDKit Draw import 시 `libXrender.so.1` 누락을 확인했습니다. `scripts/prepare-vercel-native.py`가 Vercel Linux 빌드에서 Xrender·X11·Xext·expat와 필요한 X11 전이 라이브러리를 `chemistry/_native/`에 포함합니다. 시스템 패키지 라이선스와 해시·로드 순서도 기록합니다. `chemistry/native.py`가 RDKit Draw import 전에 이 라이브러리를 로드합니다. glibc를 복사하지 않으며 Windows에서는 적용하지 않습니다. 최종 원격 API·브라우저 검증은 별도로 진행합니다.
+커밋 `fcf0315`에서 연결된 Vercel 빌드가 성공해 용량 오류 해결을 확인했습니다. 이어 실제 API에서 500을 발견했고, 사용자가 제공한 실행 로그에서 RDKit Draw import 시 `libXrender.so.1` 누락을 확인했습니다. `scripts/prepare-vercel-native.py`가 Vercel Linux 빌드에서 Xrender·X11·Xext·expat와 필요한 X11 전이 라이브러리를 `chemistry/_native/`에 포함합니다. 시스템 패키지 라이선스와 해시·로드 순서도 기록합니다. `chemistry/native.py`가 RDKit Draw import 전에 이 라이브러리를 로드합니다. glibc를 복사하지 않으며 Windows에서는 적용하지 않습니다.
+
+최종 앱 수정 커밋은 `40c64e34195810897452a96193772b92351208b8`입니다. Vercel 배포 `dpl_AVcoep2U8jEySUAv4GvTXwQ5U8k3`가 성공했고 공개 사이트는 https://molecule-studio-ee6n.vercel.app 입니다. `/api/molecule` GET은 HTTP 200과 RDKit `2026.03.6`을 반환했습니다. 실제 운영 사이트의 브라우저 검증은 13/13 통과, 페이지 오류 0개이며 `2026-09-14T03:42:59.339Z`에 끝났습니다. 분자 생성, 물의 거리·각도, 전하 보존, 편집기, 컬렉션, 모바일, 내용이 있는 PNG 내보내기를 확인했습니다. 증거는 `evidence/vercel-size-fix/browser-final/browser-check.json`과 같은 폴더의 화면·PNG입니다. 최초 빌드 실패와 후속 런타임 실패는 별도로 보존했습니다.
 
 ## 구현과 수정
 
