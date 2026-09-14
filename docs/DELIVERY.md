@@ -2,6 +2,14 @@
 
 작업 ID: `molecule-studio-public-20260914`. 2026-09-14 재개.
 
+## 후속 Vercel 용량 수정
+
+작업 ID: `molecule-studio-vercel-size-fix-20260914`. 사용자가 GitHub를 연결한 프로젝트 `molecule-studio-ee6n`의 커밋 `979b8e6` 배포에서 함수 527.06MB/500MB 오류가 발생했습니다. 프런트엔드 빌드는 성공했으며 500kB JS 경고는 별개입니다.
+
+정적 빌더는 루트 requirements.txt를 `.vercel_python_packages`에 설치하고, Python 함수 빌더는 별도 Python 3.13 환경에서 의존성을 준비합니다. 기존 함수 제외 목록에 첫 폴더가 없어 중복 포함되는 경로를 확인했습니다. `vercel.json`의 함수 `excludeFiles`에 `.vercel_python_packages/**`를 추가했습니다. RDKit·numpy·Pillow와 앱 코드는 변경하지 않았습니다. 근거는 Vercel 공식 [정적 빌더](https://raw.githubusercontent.com/vercel/vercel/main/packages/static-build/src/index.ts) 및 [설치 함수](https://raw.githubusercontent.com/vercel/vercel/main/packages/build-utils/src/fs/run-user-scripts.ts)입니다.
+
+로컬 검증: 포함 경로 회귀 검사, TypeScript, 화학 13개 검사 및 생산 빌드 통과. Linux CPython 3.13 wheel의 압축 해제 합계는 261.69MiB입니다. 이는 의존성 아카이브 측정이며 최종 Vercel 함수 크기 측정이 아닙니다. 진단은 `evidence/vercel-size-fix/diagnosis.json`, 실행 기록은 `runs/59d513708c0f4426820586b1cd88b982/`에 보존했습니다. 연결된 원격 빌드와 운영 검증 결과는 확인 후 갱신합니다.
+
 ## 구현과 수정
 
 SMILES/MOL/편집 그래프 입력, RDKit 3D 생성, 거리·각도, VSEPR, 오비탈 개념 표시, 교육용 분광 정보, 로컬 컬렉션·노트, PNG 저장을 구현했습니다. UAISE 원본 안내는 `docs/UAISE_FRAMEWORK.md`와 README 하단에 보존했습니다.
@@ -18,7 +26,7 @@ SMILES/MOL/편집 그래프 입력, RDKit 3D 생성, 거리·각도, VSEPR, 오�
 - 빈 PNG 발견 당시 기록: `evidence/browser-blank-png/`. 이 기록의 조작 PASS는 PNG 내용 검토 PASS를 의미하지 않습니다.
 - 최종 로컬 증거: `evidence/browser/`.
 
-## 게시 상태
+## 최초 인계 당시 게시 상태 (후속 수정 전)
 
 - GitHub 공개 소스: https://github.com/musicofcity-kr/molecule-studio
 - 검증한 앱 소스 커밋: `082dcb03ca03626085dad10f0e1e80e9e7415d67`. 원격 `main`과 대조했습니다. 후속 인계 문서 커밋은 이 소스를 바꾸지 않습니다.

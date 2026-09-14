@@ -1,7 +1,7 @@
 {
   "schema_version": "4.0",
-  "task_id": "molecule-studio-public-20260914",
-  "request_reference": "2026-09-14 user: molecular modeling app and GitHub publication; subsequent explicit user instruction defers Vercel deployment. Current completion scope is local app and public GitHub sources.",
+  "task_id": "molecule-studio-vercel-size-fix-20260914",
+  "request_reference": "2026-09-14 user connected GitHub to Vercel and requests repair of the 527.06 MB function bundle failure; user supplied actual build logs.",
   "permissions": {
     "local_checks": true
   },
@@ -22,13 +22,20 @@
   ],
   "deliverables": [
     "dist/index.html",
-    "docs/USER_GUIDE.md",
-    "docs/SCIENCE.md",
-    "docs/DELIVERY.md"
+    "docs/DELIVERY.md",
+    "vercel.json"
   ],
   "checks": [
     {
-      "id": "types",
+      "id": "bundle",
+      "argv": [
+        "node",
+        "scripts/check-vercel-bundle.mjs"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "id": "build",
       "argv": [
         "node",
         "node_modules/typescript/bin/tsc",
@@ -52,43 +59,22 @@
         "-v"
       ],
       "timeout_seconds": 180
-    },
-    {
-      "id": "browser",
-      "argv": [
-        "node",
-        "scripts/browser-check.mjs"
-      ],
-      "timeout_seconds": 240
     }
   ],
   "acceptance": [
     {
-      "id": "AC-CHEMISTRY",
-      "criterion": "Valid SMILES, MOL and drawn graphs produce explicit-H optimized 3D geometry; invalid/oversized input is rejected; distances/angles and supported VSEPR are coordinate/science checked.",
+      "id": "AC-LOCAL",
+      "criterion": "The duplicate static-build Python dependency folder is excluded while API and native runtime dependencies remain; TypeScript and chemistry regressions pass.",
       "method": "command",
       "check_ids": [
+        "bundle",
+        "build",
         "chemistry"
       ]
     },
     {
-      "id": "AC-WEB",
-      "criterion": "Typed UI runs; real browser exercises drawing-to-3D, atom distance/angle and VSEPR, orbitals, spectra, local collection/notes and nonempty PNG export at desktop/mobile without uncaught errors.",
-      "method": "command",
-      "check_ids": [
-        "types",
-        "browser"
-      ]
-    },
-    {
-      "id": "AC-REVIEW",
-      "criterion": "Inspect final desktop/mobile and exported PNG; scientific approximations, unsupported structures and sources are honest and understandable.",
-      "method": "review",
-      "reviewer": "agent"
-    },
-    {
-      "id": "AC-PUBLISH",
-      "criterion": "Reviewed application sources are pushed to the public GitHub repository and the remote commit is verified. Vercel deployment is deferred by the user's explicit instruction and is outside this completion scope.",
+      "id": "AC-REMOTE",
+      "criterion": "The corrected commit is on GitHub main; the connected Vercel build succeeds and the public UI, RDKit API and browser flows work. A build failure or unavailable remote validation remains incomplete.",
       "method": "review",
       "reviewer": "agent"
     }
