@@ -1,42 +1,21 @@
 {
   "schema_version": "4.0",
-  "task_id": "chemistry-studio-formula-20260915",
-  "request_reference": "Render atom counts as subscripts in molecular formulas and charges as superscripts across the UI and PNG.",
+  "task_id": "chemistry-studio-readme-20260915",
+  "request_reference": "Rewrite README.md around the app purpose, usage and working architecture, and update GitHub.",
   "permissions": {
     "local_checks": true
   },
   "source_paths": [
-    "src",
-    "index.html",
-    "docs/USER_GUIDE.md"
+    "README.md"
   ],
   "deliverables": [
-    "dist/index.html",
-    "src/App.tsx"
+    "README.md"
   ],
-  "checks": [
-    {
-      "id": "typecheck",
-      "argv": [
-        "node",
-        "node_modules/typescript/bin/tsc",
-        "--noEmit"
-      ],
-      "timeout_seconds": 90
-    }
-  ],
+  "checks": [],
   "acceptance": [
     {
-      "id": "AC-TYPE",
-      "criterion": "TypeScript check passes.",
-      "method": "command",
-      "check_ids": [
-        "typecheck"
-      ]
-    },
-    {
-      "id": "AC-FORMULA",
-      "criterion": "Production build passes; neutral and charged formulas display subscript counts and superscript charges in identity/HUD/collection/card and formula-only title; raw stored/API formulas and IUPAC digits are unchanged; actual PNG inspected; public deployment and browser verified and test sessions closed.",
+      "id": "AC-README",
+      "criterion": "README describes the current product purpose, usage and code-grounded working architecture in Korean; removes framework-centered content; uses correct branding, paths and commands; local Markdown links resolve; the exact file is published and verified on GitHub.",
       "method": "review",
       "reviewer": "agent"
     }
