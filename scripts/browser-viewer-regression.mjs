@@ -44,6 +44,11 @@ async function clickCanvasPosition(page, position) {
 }
 
 async function saveStudyCardImage(page, filename) {
+  const record = page.getByRole('button', { name: '기록', exact: true });
+  await record.click();
+  const savedMeasurements = page.locator('.saved-measurements');
+  const savedText = await savedMeasurements.textContent();
+  assert(/H1.*O0.*H2|H1.*O0|O0.*H2/.test(savedText || ''), `recorded measurement IDs missing: ${savedText}`);
   const downloadPromise = page.waitForEvent('download', { timeout: 20_000 });
   await page.getByRole('button', { name: /학습 카드/ }).click();
   const download = await downloadPromise;
@@ -51,7 +56,7 @@ async function saveStudyCardImage(page, filename) {
   await download.saveAs(target);
   const bytes = await (await import('node:fs/promises')).stat(target);
   assert(bytes.size > 1000, `capture PNG is unexpectedly small: ${bytes.size}`);
-  return { file: target, bytes: bytes.size };
+  return { file: target, bytes: bytes.size, recordedMeasurement: savedText?.trim() };
 }
 
 await mkdir(evidenceDir, { recursive: true });
@@ -82,16 +87,17 @@ try {
   assert(imageSrc?.startsWith('data:image/png'), 'study card did not receive a PNG capture');
   cases.push({ name: 'capture includes projected atom labels', status: 'passed', capture });
 
-  // Re-submit water to clear the selection, then exercise the same canvas
+  // Choose angle again to clear selection, then exercise the same canvas
   // picking path after a small real OrbitControls rotation and zoom.
-  await smiles.fill('O');
-  await page.getByRole('button', { name: 'SMILES 분석', exact: true }).click();
-  await page.locator('.viewer-loading').waitFor({ state: 'detached', timeout: 60_000 }).catch(() => {});
-  await page.locator('.atom-label').filter({ hasText: /^0 · O$/ }).waitFor({ state: 'visible', timeout: 60_000 });
   await page.getByRole('button', { name: /각도/ }).click();
   const canvas = page.locator('.viewer-stage canvas');
   const canvasBox = await canvas.boundingBox();
   assert(canvasBox, 'canvas is not measurable after water reload');
+  const initialPositions = [
+    await projectedCanvasPosition(page, 1, 'H'),
+    await projectedCanvasPosition(page, 0, 'O'),
+    await projectedCanvasPosition(page, 2, 'H'),
+  ];
   const blankX = canvasBox.x + canvasBox.width * 0.82;
   const blankY = canvasBox.y + canvasBox.height * 0.22;
   await page.mouse.move(blankX, blankY);
@@ -105,6 +111,8 @@ try {
     await projectedCanvasPosition(page, 0, 'O'),
     await projectedCanvasPosition(page, 2, 'H'),
   ];
+  const projectionDelta = Math.max(...rotatedPositions.map((position, index) => Math.hypot(position.x - initialPositions[index].x, position.y - initialPositions[index].y)));
+  assert(projectionDelta > 3, `camera motion did not change projected coordinates: ${projectionDelta}`);
   for (const position of rotatedPositions) await clickCanvasPosition(page, position);
   const rotatedMeasurement = await page.locator('.measurement-strip').textContent();
   assert(/104|105|106|107|108|109|110|111|112|113|114/.test(rotatedMeasurement || ''), `rotated water angle missing: ${rotatedMeasurement}`);
@@ -116,9 +124,6 @@ try {
   assert(await page.locator('.atom-label').count() === 0, 'atom labels did not hide');
   // Clear the selection while labels remain hidden, then briefly show labels
   // only to record the exact current projection coordinates.
-  await smiles.fill('O');
-  await page.getByRole('button', { name: 'SMILES 분석', exact: true }).click();
-  await page.locator('.viewer-loading').waitFor({ state: 'detached', timeout: 60_000 }).catch(() => {});
   await page.getByRole('button', { name: /각도/ }).click();
   await page.getByRole('checkbox', { name: '원자 라벨' }).check();
   await page.locator('.atom-label').filter({ hasText: /^0 · O$/ }).waitFor({ state: 'visible' });
