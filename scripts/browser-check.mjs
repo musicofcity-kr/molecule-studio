@@ -47,11 +47,11 @@ async function waitForMolecule(page, timeout = 60_000) {
 }
 
 async function submitSmiles(page, smiles, timeout = 60_000) {
-  await page.getByRole('button', { name: 'SMILES 분석' }).waitFor({ state: 'visible' });
+  await page.getByRole('button', { name: 'SMILES 분석', exact: true }).waitFor({ state: 'visible' });
   await page.waitForFunction(() => !document.querySelector('.viewer-loading'));
   await page.locator('#smiles').fill(smiles);
   const responsePromise = page.waitForResponse((response) => response.url().endsWith('/api/molecule') && response.request().method() === 'POST' && response.request().postDataJSON()?.smiles === smiles, { timeout });
-  const [response] = await Promise.all([responsePromise, page.getByRole('button', { name: 'SMILES 분석' }).click()]);
+  const [response] = await Promise.all([responsePromise, page.getByRole('button', { name: 'SMILES 분석', exact: true }).click()]);
   assert(response.ok(), `SMILES ${smiles} API returned ${response.status()}`);
   const body = await response.json();
   await page.waitForFunction((canonical) => document.querySelector('#smiles')?.value === canonical && !document.querySelector('.viewer-loading'), body.smiles, { timeout });
@@ -240,7 +240,7 @@ try {
   await runCase('invalid SMILES displays safe request error', async () => {
     await page.locator('#smiles').fill('C1=');
     const responsePromise = page.waitForResponse((response) => response.url().endsWith('/api/molecule') && response.request().postDataJSON()?.smiles === 'C1=', { timeout: 60_000 });
-    const [response] = await Promise.all([responsePromise, page.getByRole('button', { name: 'SMILES 분석' }).click()]);
+    const [response] = await Promise.all([responsePromise, page.getByRole('button', { name: 'SMILES 분석', exact: true }).click()]);
     assert(response.status() === 400, `invalid SMILES returned ${response.status()}`);
     const banner = page.locator('.error-banner');
     await banner.waitFor({ state: 'visible', timeout: 10_000 });
@@ -363,7 +363,7 @@ try {
     assert((await stat(target)).size > 1000, 'mobile study card is empty');
     return { angle, vsepr: 'AX2E2', png: target, pixels: await verifyPngContent(page, target) };
   });
-  assert(await page.getByRole('button', { name: 'SMILES 분석' }).isVisible(), 'SMILES control is not visible on mobile');
+  assert(await page.getByRole('button', { name: 'SMILES 분석', exact: true }).isVisible(), 'SMILES control is not visible on mobile');
   assert(await page.getByRole('checkbox', { name: 'H 표시' }).isVisible(), 'hydrogen control is not visible on mobile');
   const mobileWidth = await page.evaluate(() => ({ body: document.body.scrollWidth, viewport: document.documentElement.clientWidth }));
   assert(mobileWidth.body <= mobileWidth.viewport + 1, `mobile horizontal overflow: ${JSON.stringify(mobileWidth)}`);

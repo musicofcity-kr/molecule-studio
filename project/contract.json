@@ -1,7 +1,7 @@
 {
   "schema_version": "4.0",
-  "task_id": "molecule-studio-science-brief-20260914",
-  "request_reference": "Molecule_Studio_Codex_Fix_Brief.md: required P0/P1; P2 remains optional follow-up.",
+  "task_id": "molecule-studio-usability-fixes-20260915",
+  "request_reference": "Fix F01-F10 from current Chrome audit. Astra main coordinates Sol, Terra, Luna; preserve audit evidence.",
   "permissions": {
     "local_checks": true
   },
@@ -13,20 +13,24 @@
     "scripts",
     "package.json",
     "package-lock.json",
-    "requirements.txt",
-    "index.html",
     "vite.config.ts",
-    "tsconfig.json",
     "vercel.json",
-    "docs"
+    "docs/USABILITY_FIX_REPORT.md"
   ],
   "deliverables": [
     "dist/index.html",
-    "docs/DELIVERY.md",
-    "vercel.json",
-    "docs/SCIENCE_FIX_REPORT.md"
+    "docs/USABILITY_FIX_REPORT.md"
   ],
   "checks": [
+    {
+      "id": "typecheck",
+      "argv": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "timeout_seconds": 90
+    },
     {
       "id": "bundle",
       "argv": [
@@ -36,20 +40,12 @@
       "timeout_seconds": 30
     },
     {
-      "id": "build",
-      "argv": [
-        "node",
-        "node_modules/typescript/bin/tsc",
-        "--noEmit"
-      ],
-      "timeout_seconds": 90
-    },
-    {
       "id": "chemistry",
       "argv": [
         ".venv/Scripts/python.exe",
         "-X",
         "utf8",
+        "-B",
         "-m",
         "unittest",
         "discover",
@@ -64,18 +60,24 @@
   ],
   "acceptance": [
     {
-      "id": "AC-LOCAL",
-      "criterion": "CHEM-01/02/03: conservative carbonyl classification, unchanged raw HBD/HBA with provenance, geometry-reference separation, coordinate consistency and input bounds pass regressions.",
+      "id": "AC-BASE",
+      "criterion": "TypeScript, deployment bundle constraints and existing chemistry regressions pass; educational science behavior preserved.",
       "method": "command",
       "check_ids": [
+        "typecheck",
         "bundle",
-        "build",
         "chemistry"
       ]
     },
     {
-      "id": "AC-REMOTE",
-      "criterion": "SPEC-01 and UX-01: shared range rendering on screen/card, Korean scientific limits/errors, safe legacy collection and state transitions; real local/live browser verifies examples, MOL, WebGL, measurement, storage, mobile and meaningful PNG. GitHub/Vercel publication is verified. Report covers required statuses and limitations.",
+      "id": "AC-UI",
+      "criterion": "F01-F10 fixed and verified with real browser pointer/key/storage/export workflows; regression scripts plus existing browser coverage pass. Actual PNG and responsive UI inspected. Independent reviews documented.",
+      "method": "review",
+      "reviewer": "agent"
+    },
+    {
+      "id": "AC-DELIVERY",
+      "criterion": "Issue-by-issue fix report; existing authorized GitHub/Vercel delivery checked at applied commit and public URL; local versus deployed evidence distinguished; automation sessions cleaned.",
       "method": "review",
       "reviewer": "agent"
     }

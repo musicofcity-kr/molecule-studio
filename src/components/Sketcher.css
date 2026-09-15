@@ -1,0 +1,16 @@
+.sketch-feedback {
+  min-height: 16px;
+  margin: 8px 0 -2px;
+  color: #58727b;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.sketch-bond { cursor: pointer; }
+.bond-hit-area {
+  stroke: transparent;
+  stroke-width: 14px;
+  pointer-events: stroke;
+}
+
+.sketch-canvas .canvas-hint { pointer-events: none; }

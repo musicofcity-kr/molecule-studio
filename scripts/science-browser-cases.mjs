@@ -129,7 +129,7 @@ export async function scienceBrowserCases({ page, runCase, submitSmiles, setMode
     const before = await formula();
     await page.locator('#smiles').fill('C(C)(C)(C)(C)C');
     const pending = page.waitForResponse(r => r.url().endsWith('/api/molecule') && r.request().postDataJSON()?.smiles === 'C(C)(C)(C)(C)C');
-    await page.getByRole('button', { name: 'SMILES 분석' }).click();
+    await page.getByRole('button', { name: 'SMILES 분석', exact: true }).click();
     assert((await pending).status() === 400, 'invalid valence accepted');
     await page.locator('.error-banner').waitFor();
     const error = await text(page.locator('.error-banner'));
@@ -167,7 +167,7 @@ export async function scienceBrowserCases({ page, runCase, submitSmiles, setMode
     });
     try {
       await page.locator('#smiles').fill('O=C=O');
-      await page.getByRole('button', { name: 'SMILES 분석' }).click(); await seen;
+      await page.getByRole('button', { name: 'SMILES 분석', exact: true }).click(); await seen;
       await page.locator('.collection-button').click();
       await page.locator('.collection-load').filter({ hasText: 'H2O' }).first().click();
       release(); await done;

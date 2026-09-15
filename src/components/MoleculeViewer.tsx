@@ -262,6 +262,7 @@ export default function MoleculeViewer({
   const pointerDownRef = useRef<{ id: number; x: number; y: number } | null>(null);
   const lastMoleculeRef = useRef<Molecule | null>(null);
   const measurementRef = useRef<{ atoms: Atom[]; value: number; label: string } | null>(null);
+  const moleculeRef = useRef<Molecule | null>(molecule);
   const onAtomClickRef = useRef(onAtomClick);
   const captureReadyRef = useRef(onCaptureReady);
   const updateLabelsRef = useRef<() => void>(() => {});
@@ -269,6 +270,7 @@ export default function MoleculeViewer({
 
   onAtomClickRef.current = onAtomClick;
   captureReadyRef.current = onCaptureReady;
+  moleculeRef.current = molecule;
 
   const atomById = useMemo(() => {
     const map = new Map<number, Atom>();
@@ -282,6 +284,12 @@ export default function MoleculeViewer({
   );
 
   const selectedSet = useMemo(() => new Set(selectedAtoms), [selectedAtoms]);
+  const visibleAtomsRef = useRef<Atom[]>(visibleAtoms);
+  const showLabelsRef = useRef(showLabels);
+  const selectedSetRef = useRef<Set<number>>(selectedSet);
+  visibleAtomsRef.current = visibleAtoms;
+  showLabelsRef.current = showLabels;
+  selectedSetRef.current = selectedSet;
 
   const measurement = useMemo(() => {
     if (!molecule || (mode === 'inspect' ? true : mode === 'distance' ? selectedAtoms.length < 2 : selectedAtoms.length < 3)) return null;
@@ -408,7 +416,9 @@ export default function MoleculeViewer({
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(pointer, camera);
       const hits = raycaster.intersectObjects(modelGroup.children, true);
-      const hit = hits.find((item) => typeof item.object.userData.atomId === 'number');
+      // Only the atom body is pickable. Selection halos, outlines, orbitals and
+      // measurement lines can overlap a body and must never steal its click.
+      const hit = hits.find((item) => item.object.userData.pickableAtom === true);
       if (hit) onAtomClickRef.current(hit.object.userData.atomId as number);
     };
     renderer.domElement.addEventListener('pointerdown', pointerDown);
@@ -424,7 +434,49 @@ export default function MoleculeViewer({
 
     captureReadyRef.current?.(() => {
       renderer.render(scene, camera);
-      return renderer.domElement.toDataURL('image/png');
+      if (!showLabelsRef.current || !moleculeRef.current) return renderer.domElement.toDataURL('image/png');
+
+      // The HTML labels sit above the WebGL canvas and are therefore absent
+      // from toDataURL(). Compose their projected positions into a 2D canvas
+      // synchronously so the existing capture API remains unchanged.
+      const output = document.createElement('canvas');
+      output.width = renderer.domElement.width;
+      output.height = renderer.domElement.height;
+      const context = output.getContext('2d');
+      if (!context) return renderer.domElement.toDataURL('image/png');
+      context.drawImage(renderer.domElement, 0, 0);
+      const pixelRatio = output.width / Math.max(1, renderer.domElement.clientWidth);
+      const group = modelGroupRef.current;
+      const selected = selectedSetRef.current;
+      context.font = `700 ${11 * pixelRatio}px Inter, Pretendard, system-ui, sans-serif`;
+      context.textBaseline = 'middle';
+      visibleAtomsRef.current.forEach((atom) => {
+        const point = new THREE.Vector3(atom.x, atom.y, atom.z);
+        if (group) group.localToWorld(point);
+        point.project(camera);
+        if (point.z <= -1 || point.z >= 1 || Math.abs(point.x) > 1.1 || Math.abs(point.y) > 1.1) return;
+        const text = `${atom.id} · ${normalizeElement(atom.element)}`;
+        const paddingX = 5 * pixelRatio;
+        const boxHeight = 17 * pixelRatio;
+        const boxWidth = context.measureText(text).width + paddingX * 2;
+        const x = (point.x * 0.5 + 0.5) * output.width;
+        const y = (-point.y * 0.5 + 0.5) * output.height;
+        const left = x - boxWidth / 2;
+        const top = y - boxHeight / 2;
+        const radius = 5 * pixelRatio;
+        const border = selected.has(atom.id) ? '#ffad00' : '#d4dce6';
+        const color = selected.has(atom.id) ? '#9b6200' : labelColorForElement(atom.element);
+        context.beginPath();
+        context.roundRect(left, top, boxWidth, boxHeight, radius);
+        context.fillStyle = 'rgba(255,255,255,.86)';
+        context.fill();
+        context.strokeStyle = border;
+        context.lineWidth = pixelRatio;
+        context.stroke();
+        context.fillStyle = color;
+        context.fillText(text, left + paddingX, y);
+      });
+      return output.toDataURL('image/png');
     });
 
     return () => {
@@ -493,6 +545,7 @@ export default function MoleculeViewer({
       const atomMesh = new THREE.Mesh(new THREE.SphereGeometry(atomRadius(atom), 28, 18), material);
       atomMesh.position.copy(position);
       atomMesh.userData.atomId = atom.id;
+      atomMesh.userData.pickableAtom = true;
       group.add(atomMesh);
       if (selectedSet.has(atom.id)) {
         const selectedMaterial = new THREE.MeshBasicMaterial({ color: 0xffb300, transparent: true, opacity: 0.32, side: THREE.BackSide });

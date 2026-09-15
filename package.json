@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview --host 127.0.0.1",
     "test:chemistry": "python -X utf8 -m unittest discover -s app_tests -p test_*.py -v",
-    "test:browser": "node scripts/browser-check.mjs"
+    "test:browser": "node scripts/browser-check.mjs",
+    "test:usability": "node scripts/usability-check.mjs"
   },
   "dependencies": {
     "html-to-image": "1.11.13",

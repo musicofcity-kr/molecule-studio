@@ -1,10 +1,11 @@
-# 역할과 순서
+# 2026-09-15 사용성 수정
 
-- Astra: 범위·인터페이스·의존성·통합·브라우저 QA·GitHub/Vercel 게시·UAISE 증거.
-- SOL: `api/`, `chemistry/`, 과학 근거와 backend tests.
-- TERRA: App, 2D 편집기, 분광 UI, 메모와 이미지 저장, 반응형 CSS.
-- LUNA: Three.js 뷰어, 원자 선택과 3D 측정, 오비탈 개념도.
+1. Astra: 감사 증거 보존, 계약·모듈 경계 확정, 통합과 실제 브라우저 검증.
+2. Terra: Sketcher의 F01/F03/F04/F05 및 실제 포인터 회귀 검사.
+3. Sol: App의 F06/F07/F08/F09 및 저장·노트·키보드 회귀 검사.
+4. Luna: MoleculeViewer의 F02/F10 및 직접 원자 선택·PNG 회귀 검사.
+5. Astra: 생산 빌드, 기존 브라우저·화학 검사, 세 회귀 검사, 최종 화면·PNG 검토. 구현 에이전트 간 독립 교차 검토.
+6. 기존 승인된 GitHub 연결 경로로 검증한 코드를 반영하고 Vercel 적용 SHA·익명 URL·실제 API/브라우저를 확인한다. 감사 화면은 로컬에 보존하며 배포 커밋에 포함하지 않는다.
+7. 항목별 수정 결과와 실패/수리/재검증을 docs/USABILITY_FIX_REPORT.md 및 evidence/usability-fixes-20260915/에 기록하고 UAISE finish로 확정한다.
 
-공통 타입을 고정하고 다른 파일에서 병행 구현한다. 통합 빌드와 실제 입력·측정·저장·모바일 검사를 수행한다. 검사 통과 코드를 GitHub에 게시한다.
-
-2026-09-14 후속 수정: 사용자가 연결한 Vercel의 함수 용량 초과를 처리한다. science_review가 빌더의 설치·포함 경로를 읽기 전용으로 조사하고, 메인이 중복 설치 폴더 제외·로컬 검증·GitHub 반영·실제 연결 배포 검증을 담당한다. 검증된 범위만 `tools/uaise.py finish`로 확정한다.
+공유 src/styles.css와 타입/API는 임의로 동시 수정하지 않는다. 필요한 공통 변경은 Astra가 조율한다. 이전 계약·계획은 evidence/usability-fixes-20260915/에 보존한다.
