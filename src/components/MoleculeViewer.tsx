@@ -15,6 +15,7 @@ export type MoleculeViewerMode = 'inspect' | 'distance' | 'angle';
 
 export type MoleculeViewerProps = {
   molecule: Molecule | null;
+  displayName?: string;
   mode: MoleculeViewerMode;
   selectedAtoms: number[];
   onAtomClick: (id: number) => void;
@@ -240,6 +241,7 @@ const disposeObject = (object: THREE.Object3D) => {
 
 export default function MoleculeViewer({
   molecule,
+  displayName,
   mode,
   selectedAtoms,
   onAtomClick,
@@ -613,7 +615,7 @@ export default function MoleculeViewer({
       ) : null}
       <div style={hudStyle} aria-live="polite">
         <div style={pillStyle}>
-          <strong>{moleculeDisplayName(molecule?.name)}</strong>
+          <strong style={{ display: 'inline-block', maxWidth: 'min(58vw, 520px)', overflowWrap: 'anywhere', verticalAlign: 'middle' }}>{displayName ?? moleculeDisplayName(molecule?.name)}</strong>
           {molecule ? <span style={{ marginLeft: 7, color: '#627386' }}>{molecule.formula}</span> : null}
           {measurementText ? <div style={{ marginTop: 3, color: '#155da7', fontWeight: 700 }}>{mode === 'angle' ? '각도' : '거리'} · {measurementText}</div> : null}
         </div>

@@ -1,7 +1,9 @@
-# 2026-09-15 명칭 변경
+# IUPAC 이름 표시
 
-1. Luna: 앱 브랜드, HTML 제목·설명, 사용법 제목 변경.
-2. Astra: 범위 검토, 생산 빌드, 데스크톱·모바일 표시 확인.
-3. Astra: 기존 승인된 GitHub/Vercel 경로로 반영하고 공개 이름 및 배포 상태 확인 후 UAISE finish.
+1. Terra: 별도 이름 조회, 입력·입체정보 대조·타임아웃·캐시와 단위검사.
+2. Sol: 이름 상태 분리, 일반명/IUPAC/분자식 표시, 순서 역전 방지, 컬렉션/PNG.
+3. Luna: 실제 구조 API와 명시된 이름 mock 회귀, 실서비스 조회 smoke, 보고서.
+4. Astra: 교차검토 반영, 빌드·기존/신규 검사, 실제 PubChem와 화면·PNG 확인.
+5. Astra: 기존 승인된 GitHub/Vercel 반영, 공개 API·브라우저 확인, 증거 정리와 UAISE finish.
 
-이전 계약·목적·계획과 현재 검증 증거는 evidence/rename-20260915/에 보존한다.
+증거와 이전 작업 계약은 evidence/iupac-20260915/에 보존한다.

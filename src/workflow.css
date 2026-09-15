@@ -3,3 +3,16 @@
 .workflow-help:focus { outline:2px solid #21877e; outline-offset:-2px; }
 .workflow-help ol { display:grid; gap:4px; margin:2px 0 0; padding-left:18px; line-height:1.55; }
 .workflow-help li b { color:#345967; }
+.identity-panel .iupac-name,.study-card .iupac-name { margin:5px 0 0; color:#526b77; font-size:11px; line-height:1.55; overflow-wrap:anywhere; word-break:break-word; }
+.iupac-name b { color:#167f78; font-size:9px; letter-spacing:.08em; margin-right:5px; }
+.naming-status { display:flex; align-items:center; justify-content:space-between; gap:7px; margin:7px 0 0; color:#6b7e86; font-size:10px; }
+.naming-status span { display:inline-flex; align-items:center; gap:5px; }
+.naming-status button { flex:0 0 auto; padding:4px 7px; border-radius:6px; background:#edf3ef; color:#1b6c66; font-size:9px; font-weight:700; }
+.naming-source { display:inline-block; margin-top:6px; color:#217b71; font-size:10px; text-decoration:underline; }
+.collection-load small { display:block; max-width:390px; margin-top:2px; color:#61747b; font-size:9px; line-height:1.4; overflow-wrap:anywhere; }
+.study-card .study-name { min-width:0; }
+.study-card .study-name h1 { overflow-wrap:anywhere; word-break:break-word; }
+.study-card .name-kind { display:block; margin-top:5px; color:#61747b; }
+.study-card .naming-status,.study-card .naming-source { margin:3px 0; font-size:11px; text-decoration:none; }
+.identity-panel h1,.collection-load strong { overflow-wrap:anywhere; word-break:break-word; }
+.collection-load { min-width:0; }

@@ -1,20 +1,24 @@
 {
   "schema_version": "4.0",
-  "task_id": "chemistry-studio-rename-20260915",
-  "request_reference": "Rename user-facing 분자 스튜디오 to 모두의 화학 스튜디오.",
+  "task_id": "chemistry-studio-iupac-20260915",
+  "request_reference": "Apply common and IUPAC names with asynchronous lookup, formula fallback, collection and study-card support.",
   "permissions": {
     "local_checks": true
   },
   "source_paths": [
-    "src/App.tsx",
-    "index.html",
-    "docs/USER_GUIDE.md"
+    "src",
+    "api",
+    "chemistry",
+    "app_tests",
+    "scripts",
+    "docs/IUPAC_NAME_REPORT.md",
+    "docs/USER_GUIDE.md",
+    "package.json",
+    "vercel.json"
   ],
   "deliverables": [
     "dist/index.html",
-    "src/App.tsx",
-    "index.html",
-    "docs/USER_GUIDE.md"
+    "docs/IUPAC_NAME_REPORT.md"
   ],
   "checks": [
     {
@@ -25,26 +29,60 @@
         "--noEmit"
       ],
       "timeout_seconds": 90
+    },
+    {
+      "id": "chemistry",
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "-X",
+        "utf8",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "app_tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "id": "bundle",
+      "argv": [
+        "node",
+        "scripts/check-vercel-bundle.mjs"
+      ],
+      "timeout_seconds": 30
     }
   ],
   "acceptance": [
     {
-      "id": "AC-BUILD",
-      "criterion": "TypeScript check passes.",
+      "id": "AC-BASE",
+      "criterion": "TypeScript, existing chemistry plus naming unit tests and deployment bundle checks pass.",
       "method": "command",
       "check_ids": [
-        "typecheck"
+        "typecheck",
+        "chemistry",
+        "bundle"
       ]
     },
     {
-      "id": "AC-NAME",
-      "criterion": "New brand, accessible home link, browser title/description and guide title agree; production build and desktop/mobile visual review pass; public deployment shows the new name and automation session is closed.",
+      "id": "AC-NAMING",
+      "criterion": "Actual external PubChem lookup verified; source and exact structure matching; nonblocking UI, stale-response safety, name fallback, collection/PNG and mobile display verified; existing browser regression passes. Mock and live evidence are separate.",
+      "method": "review",
+      "reviewer": "agent"
+    },
+    {
+      "id": "AC-DELIVERY",
+      "criterion": "Itemized result report and independent review; approved public GitHub/Vercel commit and deployed name API/browser verified; automation cleanup recorded.",
       "method": "review",
       "reviewer": "agent"
     }
   ],
   "limits": {
     "max_no_progress_attempts": 2,
-    "total_check_seconds": 120
+    "total_check_seconds": 600
   }
 }

@@ -6,7 +6,7 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import sys
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 
 # Running ``python api/molecule.py`` places api/ rather than the project root on
@@ -19,6 +19,7 @@ from rdkit import rdBase  # noqa: E402
 
 from chemistry import MAX_BODY_BYTES, MAX_GRAPH_ATOMS, MoleculeInputError, build_molecule  # noqa: E402
 from chemistry.model import MAX_GRAPH_BONDS, MAX_TOTAL_ATOMS  # noqa: E402
+from chemistry.naming import lookup_name  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -38,6 +39,9 @@ class handler(BaseHTTPRequestHandler):
 
     def _path(self) -> str:
         return urlsplit(self.path).path.rstrip("/") or "/"
+
+    def _name_lookup(self) -> bool:
+        return parse_qs(urlsplit(self.path).query).get("lookup") == ["name"]
 
     def do_OPTIONS(self) -> None:  # noqa: N802
         if self._path() != "/api/molecule":
@@ -96,7 +100,7 @@ class handler(BaseHTTPRequestHandler):
                 raw.decode("utf-8"),
                 parse_constant=lambda value: (_ for _ in ()).throw(ValueError(f"invalid constant {value}")),
             )
-            result = build_molecule(payload)
+            result = lookup_name(payload) if self._name_lookup() else build_molecule(payload)
         except UnicodeDecodeError:
             self._json(400, {"error": {"code": "invalid_encoding", "message": "Request body must be UTF-8."}})
             return

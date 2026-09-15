@@ -151,8 +151,12 @@ export async function scienceBrowserCases({ page, runCase, submitSmiles, setMode
     const content = await text(page.locator('main'));
     assert(!content.includes('212.5') && !content.includes('ketone'), 'legacy misclassification reappeared');
     assert(content.includes('이전 버전으로 저장된 자료'), 'legacy interpretation is not identified');
-    assert(JSON.stringify(await page.evaluate(key => JSON.parse(localStorage.getItem(key))[0], key)) === JSON.stringify(legacy), 'loading changed original legacy data');
-    return { syntheticLegacyFixture: true, originalDataPreserved: true, oldScienceHidden: true };
+    const restored = await page.evaluate(key => JSON.parse(localStorage.getItem(key))[0], key);
+    const nameMetadata = restored.molecule.naming;
+    delete restored.molecule.naming;
+    assert(JSON.stringify(restored) === JSON.stringify(legacy), 'loading changed original legacy structure, science, notes or measurements');
+    if (nameMetadata) assert(nameMetadata.smiles === legacy.molecule.smiles, 'legacy name metadata belongs to another structure');
+    return { syntheticLegacyFixture: true, originalDataPreserved: true, namingMetadataMayBeAdded: true, oldScienceHidden: true };
   });
 
   await runCase('brief: pending response cannot overwrite loaded collection', async () => {

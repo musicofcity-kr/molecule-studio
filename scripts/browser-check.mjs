@@ -315,7 +315,7 @@ try {
     await page.getByRole('textbox', { name: '학습 노트' }).fill(note);
     await page.getByRole('button', { name: '현재 분자를 컬렉션에 저장' }).click();
     await page.locator('.collection-modal').waitFor({ state: 'visible', timeout: 10_000 });
-    assert(await page.getByRole('button', { name: /Molecule|이름 없는 분자/ }).count() > 0, 'saved collection entry is missing');
+    assert(await page.locator('.collection-load').count() > 0 && (await page.locator('.collection-load strong').first().textContent())?.trim(), 'saved collection entry is missing its name or formula');
     await page.locator('.collection-load').first().click();
     assert(await page.getByRole('textbox', { name: '학습 노트' }).inputValue() === note, 'saved note was not restored');
     return { note };
