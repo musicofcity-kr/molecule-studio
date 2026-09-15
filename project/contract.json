@@ -1,24 +1,18 @@
 {
   "schema_version": "4.0",
-  "task_id": "chemistry-studio-iupac-20260915",
-  "request_reference": "Apply common and IUPAC names with asynchronous lookup, formula fallback, collection and study-card support.",
+  "task_id": "chemistry-studio-formula-20260915",
+  "request_reference": "Render atom counts as subscripts in molecular formulas and charges as superscripts across the UI and PNG.",
   "permissions": {
     "local_checks": true
   },
   "source_paths": [
     "src",
-    "api",
-    "chemistry",
-    "app_tests",
-    "scripts",
-    "docs/IUPAC_NAME_REPORT.md",
-    "docs/USER_GUIDE.md",
-    "package.json",
-    "vercel.json"
+    "index.html",
+    "docs/USER_GUIDE.md"
   ],
   "deliverables": [
     "dist/index.html",
-    "docs/IUPAC_NAME_REPORT.md"
+    "src/App.tsx"
   ],
   "checks": [
     {
@@ -29,60 +23,26 @@
         "--noEmit"
       ],
       "timeout_seconds": 90
-    },
-    {
-      "id": "chemistry",
-      "argv": [
-        ".venv/Scripts/python.exe",
-        "-X",
-        "utf8",
-        "-B",
-        "-m",
-        "unittest",
-        "discover",
-        "-s",
-        "app_tests",
-        "-p",
-        "test_*.py",
-        "-v"
-      ],
-      "timeout_seconds": 180
-    },
-    {
-      "id": "bundle",
-      "argv": [
-        "node",
-        "scripts/check-vercel-bundle.mjs"
-      ],
-      "timeout_seconds": 30
     }
   ],
   "acceptance": [
     {
-      "id": "AC-BASE",
-      "criterion": "TypeScript, existing chemistry plus naming unit tests and deployment bundle checks pass.",
+      "id": "AC-TYPE",
+      "criterion": "TypeScript check passes.",
       "method": "command",
       "check_ids": [
-        "typecheck",
-        "chemistry",
-        "bundle"
+        "typecheck"
       ]
     },
     {
-      "id": "AC-NAMING",
-      "criterion": "Actual external PubChem lookup verified; source and exact structure matching; nonblocking UI, stale-response safety, name fallback, collection/PNG and mobile display verified; existing browser regression passes. Mock and live evidence are separate.",
-      "method": "review",
-      "reviewer": "agent"
-    },
-    {
-      "id": "AC-DELIVERY",
-      "criterion": "Itemized result report and independent review; approved public GitHub/Vercel commit and deployed name API/browser verified; automation cleanup recorded.",
+      "id": "AC-FORMULA",
+      "criterion": "Production build passes; neutral and charged formulas display subscript counts and superscript charges in identity/HUD/collection/card and formula-only title; raw stored/API formulas and IUPAC digits are unchanged; actual PNG inspected; public deployment and browser verified and test sessions closed.",
       "method": "review",
       "reviewer": "agent"
     }
   ],
   "limits": {
     "max_no_progress_attempts": 2,
-    "total_check_seconds": 600
+    "total_check_seconds": 120
   }
 }

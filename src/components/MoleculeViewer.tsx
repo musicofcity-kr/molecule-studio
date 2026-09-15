@@ -5,17 +5,19 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
 } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Atom, Bond, Molecule } from '../types';
 import { moleculeDisplayName } from '../lib/chemistry';
+import ChemicalFormula from './ChemicalFormula';
 
 export type MoleculeViewerMode = 'inspect' | 'distance' | 'angle';
 
 export type MoleculeViewerProps = {
   molecule: Molecule | null;
-  displayName?: string;
+  displayName?: ReactNode;
   mode: MoleculeViewerMode;
   selectedAtoms: number[];
   onAtomClick: (id: number) => void;
@@ -616,7 +618,7 @@ export default function MoleculeViewer({
       <div style={hudStyle} aria-live="polite">
         <div style={pillStyle}>
           <strong style={{ display: 'inline-block', maxWidth: 'min(58vw, 520px)', overflowWrap: 'anywhere', verticalAlign: 'middle' }}>{displayName ?? moleculeDisplayName(molecule?.name)}</strong>
-          {molecule ? <span style={{ marginLeft: 7, color: '#627386' }}>{molecule.formula}</span> : null}
+          {molecule ? <ChemicalFormula formula={molecule.formula} className="viewer-formula" /> : null}
           {measurementText ? <div style={{ marginTop: 3, color: '#155da7', fontWeight: 700 }}>{mode === 'angle' ? '각도' : '거리'} · {measurementText}</div> : null}
         </div>
         {orbitalAtom ? <div style={{ ...pillStyle, color: '#34404d' }}>혼성 오비탈 개념도 · 양자화학 계산 아님 · {orbitalAtom.id} ({hybridizationKind(orbitalAtom.hybridization) || 'unknown'})</div> : null}
