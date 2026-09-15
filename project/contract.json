@@ -1,25 +1,20 @@
 {
   "schema_version": "4.0",
-  "task_id": "molecule-studio-usability-fixes-20260915",
-  "request_reference": "Fix F01-F10 from current Chrome audit. Astra main coordinates Sol, Terra, Luna; preserve audit evidence.",
+  "task_id": "chemistry-studio-rename-20260915",
+  "request_reference": "Rename user-facing 분자 스튜디오 to 모두의 화학 스튜디오.",
   "permissions": {
     "local_checks": true
   },
   "source_paths": [
-    "src",
-    "api",
-    "chemistry",
-    "app_tests",
-    "scripts",
-    "package.json",
-    "package-lock.json",
-    "vite.config.ts",
-    "vercel.json",
-    "docs/USABILITY_FIX_REPORT.md"
+    "src/App.tsx",
+    "index.html",
+    "docs/USER_GUIDE.md"
   ],
   "deliverables": [
     "dist/index.html",
-    "docs/USABILITY_FIX_REPORT.md"
+    "src/App.tsx",
+    "index.html",
+    "docs/USER_GUIDE.md"
   ],
   "checks": [
     {
@@ -30,60 +25,26 @@
         "--noEmit"
       ],
       "timeout_seconds": 90
-    },
-    {
-      "id": "bundle",
-      "argv": [
-        "node",
-        "scripts/check-vercel-bundle.mjs"
-      ],
-      "timeout_seconds": 30
-    },
-    {
-      "id": "chemistry",
-      "argv": [
-        ".venv/Scripts/python.exe",
-        "-X",
-        "utf8",
-        "-B",
-        "-m",
-        "unittest",
-        "discover",
-        "-s",
-        "app_tests",
-        "-p",
-        "test_*.py",
-        "-v"
-      ],
-      "timeout_seconds": 180
     }
   ],
   "acceptance": [
     {
-      "id": "AC-BASE",
-      "criterion": "TypeScript, deployment bundle constraints and existing chemistry regressions pass; educational science behavior preserved.",
+      "id": "AC-BUILD",
+      "criterion": "TypeScript check passes.",
       "method": "command",
       "check_ids": [
-        "typecheck",
-        "bundle",
-        "chemistry"
+        "typecheck"
       ]
     },
     {
-      "id": "AC-UI",
-      "criterion": "F01-F10 fixed and verified with real browser pointer/key/storage/export workflows; regression scripts plus existing browser coverage pass. Actual PNG and responsive UI inspected. Independent reviews documented.",
-      "method": "review",
-      "reviewer": "agent"
-    },
-    {
-      "id": "AC-DELIVERY",
-      "criterion": "Issue-by-issue fix report; existing authorized GitHub/Vercel delivery checked at applied commit and public URL; local versus deployed evidence distinguished; automation sessions cleaned.",
+      "id": "AC-NAME",
+      "criterion": "New brand, accessible home link, browser title/description and guide title agree; production build and desktop/mobile visual review pass; public deployment shows the new name and automation session is closed.",
       "method": "review",
       "reviewer": "agent"
     }
   ],
   "limits": {
     "max_no_progress_attempts": 2,
-    "total_check_seconds": 600
+    "total_check_seconds": 120
   }
 }
